@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+  # Weaviate 向量数据库
+  weaviate:
+    image: semitechnologies/weaviate:1.23.7
+    container_name: llmops-weaviate
+    restart: always
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-openai,text2vec-cohere,text2vec-huggingface,ref2vec-centroid,generative-openai,qna-openai'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+
+  # 后端 API 服务
+  llmops-api:
+    build:
+      context: ../../imooc-llmops-api/imooc-llmops-api-master
+      dockerfile: Dockerfile
+    container_name: llmops-api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # 使用本地 PostgreSQL 数据库 (host.docker.internal 用于从容器访问宿主机)
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:root@host.docker.internal:5432/llmops
+      # 使用本地 Redis 数据库
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      # 使用容器内的 Weaviate
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_PORT: 8080
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+    depends_on:
+      - weaviate
+    volumes:
+      - ../../imooc-llmops-api/imooc-llmops-api-master:/app
+    # 添加额外的主机配置，确保容器可以访问宿主机服务
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # 前端 UI 服务
+  llmops-ui:
+    image: llmops-ui:0.1.0
+    build:
+      context: ../../imooc-llmops-ui/imooc-llmops-ui-master
+      dockerfile: Dockerfile
+    container_name: llmops-ui
+    restart: always
+    environment: []
+    ports:
+      - "5173:80"
+    depends_on:
+      - llmops-api
+
+volumes:
+  weaviate_data:
