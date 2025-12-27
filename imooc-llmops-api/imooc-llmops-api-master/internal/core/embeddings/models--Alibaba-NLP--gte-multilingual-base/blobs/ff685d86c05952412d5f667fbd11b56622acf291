@@ -139,7 +139,7 @@ model-index:
       revision: 392ba3f5bcc8c51f578786c1fc3dae648662cb9b
     metrics:
     - type: v_measure
-      value: 54.20241337977897
+      value: 54.20251337977897
   - task:
       type: Clustering
     dataset:
@@ -4789,10 +4789,10 @@ Note that the models behind the commercial APIs are not entirely identical to th
 If you find our paper or models helpful, please consider cite:
 
 ```
-@misc{zhang2024mgte,
+@misc{zhang2025mgte,
       title={mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval}, 
       author={Xin Zhang and Yanzhao Zhang and Dingkun Long and Wen Xie and Ziqi Dai and Jialong Tang and Huan Lin and Baosong Yang and Pengjun Xie and Fei Huang and Meishan Zhang and Wenjie Li and Min Zhang},
-      year={2024},
+      year={2025},
       eprint={2407.19669},
       archivePrefix={arXiv},
       primaryClass={cs.CL},

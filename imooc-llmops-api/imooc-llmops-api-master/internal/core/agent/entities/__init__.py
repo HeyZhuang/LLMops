@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/01 15:36
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/01 15:36
+@Author  : ccckz@protonmail.com
 @File    : __init__.py.py
 """

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/09/01 10:30
-@Author  : thezehui@gmail.com
+@Time    : 2025/09/01 10:30
+@Author  : ccckz@protonmail.com
 @File    : document_service.py
 """
 import logging

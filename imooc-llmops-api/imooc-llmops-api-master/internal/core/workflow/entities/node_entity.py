@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/25 11:54
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/25 11:54
+@Author  : ccckz@protonmail.com
 @File    : node_entity.py
 """
 from enum import Enum

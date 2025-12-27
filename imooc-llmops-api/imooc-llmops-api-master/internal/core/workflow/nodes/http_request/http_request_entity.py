@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/26 18:30
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/26 18:30
+@Author  : ccckz@protonmail.com
 @File    : http_request_entity.py
 """
 from enum import Enum

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/09/18 13:48
-@Author  : thezehui@gmail.com
+@Time    : 2025/09/18 13:48
+@Author  : ccckz@protonmail.com
 @File    : full_text_retriever.py
 """
 from collections import Counter

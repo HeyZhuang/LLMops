@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/3 10:16
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/3 10:16
+@Author  : ccckz@protonmail.com
 @File    : base_service.py
 """
 from typing import Any, Optional

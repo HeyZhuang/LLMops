@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/19 20:46
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/19 20:46
+@Author  : ccckz@protonmail.com
 @File    : current_time.py
 """
 from datetime import datetime

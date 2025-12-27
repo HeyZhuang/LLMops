@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/13 21:57
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/13 21:57
+@Author  : ccckz@protonmail.com
 @File    : logging_extension.py
 """
 import logging

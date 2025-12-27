@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/03 13:48
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/03 13:48
+@Author  : ccckz@protonmail.com
 @File    : faiss_service.py
 """
 import os

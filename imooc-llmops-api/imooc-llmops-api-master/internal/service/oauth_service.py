@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/25 16:50
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/25 16:50
+@Author  : ccckz@protonmail.com
 @File    : oauth_service.py
 """
 import os

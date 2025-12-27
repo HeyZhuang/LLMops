@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/19 17:01
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/19 17:01
+@Author  : ccckz@protonmail.com
 @File    : openapi_handler.py
 """
 from dataclasses import dataclass

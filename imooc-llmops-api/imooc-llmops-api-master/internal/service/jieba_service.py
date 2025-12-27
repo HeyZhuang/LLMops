@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/30 15:25
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/30 15:25
+@Author  : ccckz@protonmail.com
 @File    : jieba_service.py
 """
 from dataclasses import dataclass

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/4/4 16:29
-@Author  : thezehui@gmail.com
+@Time    : 2025/4/4 16:29
+@Author  : ccckz@protonmail.com
 @File    : test_app_handler.py
 """
 import pytest

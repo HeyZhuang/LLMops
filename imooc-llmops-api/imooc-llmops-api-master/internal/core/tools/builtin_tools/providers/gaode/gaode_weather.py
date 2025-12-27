@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/19 21:23
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/19 21:23
+@Author  : ccckz@protonmail.com
 @File    : gaode_weather.py.py
 """
 import json

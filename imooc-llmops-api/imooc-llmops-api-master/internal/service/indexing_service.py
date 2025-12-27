@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/09/03 14:57
-@Author  : thezehui@gmail.com
+@Time    : 2025/09/03 14:57
+@Author  : ccckz@protonmail.com
 @File    : indexing_service.py
 """
 import logging

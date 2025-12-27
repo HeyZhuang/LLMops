@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/19 21:00
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/19 21:00
+@Author  : ccckz@protonmail.com
 @File    : app_config_service.py
 """
 from dataclasses import dataclass

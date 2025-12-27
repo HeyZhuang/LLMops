@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/30 16:14
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/30 16:14
+@Author  : ccckz@protonmail.com
 @File    : file_extractor.py
 """
 import os.path

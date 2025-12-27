@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/4/5 19:03
-@Author  : thezehui@gmail.com
+@Time    : 2025/4/5 19:03
+@Author  : ccckz@protonmail.com
 @File    : module.py
 """
 from flask_login import LoginManager

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/25 15:40
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/25 15:40
+@Author  : ccckz@protonmail.com
 @File    : code_entity.py
 """
 from langchain_core.pydantic_v1 import Field

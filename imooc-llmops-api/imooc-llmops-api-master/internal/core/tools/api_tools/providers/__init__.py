@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/4 10:24
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/4 10:24
+@Author  : ccckz@protonmail.com
 @File    : __init__.py.py
 """
 from .api_provider_manager import ApiProviderManager

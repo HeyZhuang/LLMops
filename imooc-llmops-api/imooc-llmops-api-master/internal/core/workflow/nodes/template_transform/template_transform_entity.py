@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/25 10:57
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/25 10:57
+@Author  : ccckz@protonmail.com
 @File    : template_transform_entity.py
 """
 from langchain_core.pydantic_v1 import Field, validator

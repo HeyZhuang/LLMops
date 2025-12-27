@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/01 13:51
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/01 13:51
+@Author  : ccckz@protonmail.com
 @File    : token_buffer_memory.py
 """
 from dataclasses import dataclass

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/19 21:11
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/19 21:11
+@Author  : ccckz@protonmail.com
 @File    : dalle3.py
 """
 from langchain_community.tools.openai_dalle_image_generation import OpenAIDALLEImageGenerationTool

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/09/28 0:15
-@Author  : thezehui@gmail.com
+@Time    : 2025/09/28 0:15
+@Author  : ccckz@protonmail.com
 @File    : conversation_service.py
 """
 import logging
@@ -16,6 +16,7 @@ from injector import inject
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain_community.chat_models.tongyi import ChatTongyi
 from sqlalchemy import desc
 
 from internal.core.agent.entities.queue_entity import AgentThought, QueueEvent
@@ -106,7 +107,7 @@ class ConversationService(BaseService):
         ])
 
         # 2.构建大语言模型实例，并且将大语言模型的温度调低，降低幻觉的概率
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        llm = ChatTongyi(model="qwen-max", temperature=0)
         structured_llm = llm.with_structured_output(SuggestedQuestions)
 
         # 3.构建链应用

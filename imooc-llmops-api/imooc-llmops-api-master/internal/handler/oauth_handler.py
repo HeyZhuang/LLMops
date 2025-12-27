@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/25 16:49
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/25 16:49
+@Author  : ccckz@protonmail.com
 @File    : oauth_handler.py
 """
 from dataclasses import dataclass

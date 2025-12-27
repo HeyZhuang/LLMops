@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/02 15:30
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/02 15:30
+@Author  : ccckz@protonmail.com
 @File    : language_model_service.py
 """
+import logging
 import mimetypes
 import os
 from dataclasses import dataclass
@@ -15,7 +16,8 @@ from injector import inject
 from langchain_openai import ChatOpenAI
 
 from internal.core.language_model import LanguageModelManager
-from internal.core.language_model.entities.model_entity import BaseLanguageModel
+from internal.core.language_model.entities.model_entity import BaseLanguageModel, ModelFeature
+from internal.core.language_model.providers.openai.chat import Chat
 from internal.exception import NotFoundException
 from internal.lib.helper import convert_model_to_dict
 from pkg.sqlalchemy import SQLAlchemy
@@ -112,8 +114,16 @@ class LanguageModelService(BaseService):
 
             # 2.从模型管理器获取提供者、模型实体、模型类
             provider = self.language_model_manager.get_provider(provider_name)
+            if not provider:
+                raise ValueError(f"Provider '{provider_name}' not found")
+            
             model_entity = provider.get_model_entity(model_name)
+            if not model_entity:
+                raise ValueError(f"Model '{model_name}' not found in provider '{provider_name}'")
+            
             model_class = provider.get_model_class(model_entity.model_type)
+            if not model_class:
+                raise ValueError(f"Model class not found for type '{model_entity.model_type}'")
 
             # 3.实例化模型后并返回
             return model_class(
@@ -122,10 +132,24 @@ class LanguageModelService(BaseService):
                 features=model_entity.features,
                 metadata=model_entity.metadata,
             )
-        except Exception as _:
+        except Exception as e:
+            logging.warning(f"Failed to load language model with config {model_config}: {e}. Using default model.")
             return self.load_default_language_model()
 
     @classmethod
     def load_default_language_model(cls) -> BaseLanguageModel:
         """加载默认的大语言模型，在模型管理器中获取不到模型或者出错时使用默认模型进行兜底"""
-        return ChatOpenAI(model="gpt-4o-mini", temperature=1, max_tokens=8192)
+        return Chat(
+            model="gpt-4o-mini",
+            temperature=1,
+            max_tokens=8192,
+            features=[ModelFeature.TOOL_CALL, ModelFeature.AGENT_THOUGHT],
+            metadata={
+                "pricing": {
+                    "input": 0.0011,
+                    "output": 0.0044,
+                    "unit": 0.001,
+                    "currency": "RMB"
+                }
+            }
+        )

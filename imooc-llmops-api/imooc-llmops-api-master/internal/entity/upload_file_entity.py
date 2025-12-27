@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/12 10:43
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/12 10:43
+@Author  : ccckz@protonmail.com
 @File    : upload_file_entity.py
 """
 

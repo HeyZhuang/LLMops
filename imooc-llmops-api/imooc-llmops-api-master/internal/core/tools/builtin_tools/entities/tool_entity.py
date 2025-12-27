@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/19 17:22
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/19 17:22
+@Author  : ccckz@protonmail.com
 @File    : tool_entity.py
 """
 from enum import Enum

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/01 11:04
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/01 11:04
+@Author  : ccckz@protonmail.com
 @File    : default_model_parameter_template.py
 """
 from .model_entity import DefaultModelParameterName, ModelParameterType

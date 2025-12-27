@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/02 10:58
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/02 10:58
+@Author  : ccckz@protonmail.com
 @File    : ai_entity.py
 """
 # 一段优化提示词的提示词模板

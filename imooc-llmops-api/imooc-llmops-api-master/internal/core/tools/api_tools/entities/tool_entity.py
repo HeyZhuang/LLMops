@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/4 10:27
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/4 10:27
+@Author  : ccckz@protonmail.com
 @File    : tool_entity.py
 """
 from pydantic import BaseModel, Field

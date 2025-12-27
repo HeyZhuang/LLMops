@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/01 10:50
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/01 10:50
+@Author  : ccckz@protonmail.com
 @File    : model_entity.py
 """
 from abc import ABC

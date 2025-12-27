@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/21 20:58
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/21 20:58
+@Author  : ccckz@protonmail.com
 @File    : category_entity.py
 """
 from pydantic import BaseModel, field_validator

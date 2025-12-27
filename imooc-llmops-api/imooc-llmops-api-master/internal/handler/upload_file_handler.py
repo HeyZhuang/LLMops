@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/12 10:36
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/12 10:36
+@Author  : ccckz@protonmail.com
 @File    : upload_file_handler.py
 """
 from dataclasses import dataclass

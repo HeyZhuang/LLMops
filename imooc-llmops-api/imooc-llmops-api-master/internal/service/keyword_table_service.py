@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/09/03 21:13
-@Author  : thezehui@gmail.com
+@Time    : 2025/09/03 21:13
+@Author  : ccckz@protonmail.com
 @File    : keyword_table_service.py
 """
 from dataclasses import dataclass

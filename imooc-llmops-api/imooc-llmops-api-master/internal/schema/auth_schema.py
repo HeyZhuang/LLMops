@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/25 0:21
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/25 0:21
+@Author  : ccckz@protonmail.com
 @File    : auth_schema.py
 """
 from flask_wtf import FlaskForm

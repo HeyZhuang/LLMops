@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/01 20:33
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/01 20:33
+@Author  : ccckz@protonmail.com
 @File    : chat.py
 """
 from typing import Tuple

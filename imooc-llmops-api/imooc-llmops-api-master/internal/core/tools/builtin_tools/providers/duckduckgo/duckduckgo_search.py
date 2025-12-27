@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/19 20:55
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/19 20:55
+@Author  : ccckz@protonmail.com
 @File    : duckduckgo_search.py
 """
 from langchain_community.tools import DuckDuckGoSearchRun

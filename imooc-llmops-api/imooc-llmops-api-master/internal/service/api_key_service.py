@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/19 15:14
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/19 15:14
+@Author  : ccckz@protonmail.com
 @File    : api_key_service.py
 """
 import secrets

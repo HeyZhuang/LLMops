@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/10 22:14
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/10 22:14
+@Author  : ccckz@protonmail.com
 @File    : web_app_service.py
 """
 import json

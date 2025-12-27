@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/9/1 10:16
-@Author  : thezehui@gmail.com
+@Time    : 2025/9/1 10:16
+@Author  : ccckz@protonmail.com
 @File    : document_schema.py
 """
 import uuid

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/8/2 21:04
-@Author  : thezehui@gmail.com
+@Time    : 2025/8/2 21:04
+@Author  : ccckz@protonmail.com
 @File    : paginator.py
 """
 import math

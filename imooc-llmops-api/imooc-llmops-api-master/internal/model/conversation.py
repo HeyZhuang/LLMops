@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/01 20:56
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/01 20:56
+@Author  : ccckz@protonmail.com
 @File    : conversation.py
 """
 from sqlalchemy import (

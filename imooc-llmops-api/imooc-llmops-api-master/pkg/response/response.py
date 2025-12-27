@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/4/1 19:30
-@Author  : thezehui@gmail.com
+@Time    : 2025/4/1 19:30
+@Author  : ccckz@protonmail.com
 @File    : response.py
 """
 from dataclasses import field, dataclass

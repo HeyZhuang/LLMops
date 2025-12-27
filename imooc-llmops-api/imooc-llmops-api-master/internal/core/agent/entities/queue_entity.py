@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/24 12:41
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/24 12:41
+@Author  : ccckz@protonmail.com
 @File    : queue_entity.py
 """
 from enum import Enum

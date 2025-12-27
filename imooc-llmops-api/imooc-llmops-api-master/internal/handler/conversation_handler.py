@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/10 10:43
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/10 10:43
+@Author  : ccckz@protonmail.com
 @File    : conversation_handler.py
 """
 from dataclasses import dataclass

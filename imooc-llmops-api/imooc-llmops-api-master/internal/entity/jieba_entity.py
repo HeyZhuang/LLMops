@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/4/19 9:48
-@Author  : thezehui@gmail.com
+@Time    : 2025/4/19 9:48
+@Author  : ccckz@protonmail.com
 @File    : jieba_entity.py
 """
 # 结巴停止词集合，在停止词列表中的关键词，不会被统计

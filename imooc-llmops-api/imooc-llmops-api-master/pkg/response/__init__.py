@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/4/1 19:26
-@Author  : thezehui@gmail.com
+@Time    : 2025/4/1 19:26
+@Author  : ccckz@protonmail.com
 @File    : __init__.py.py
 """
 from .http_code import HttpCode

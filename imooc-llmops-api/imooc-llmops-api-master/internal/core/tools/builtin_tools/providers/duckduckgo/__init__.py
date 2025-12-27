@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/7/19 20:54
-@Author  : thezehui@gmail.com
+@Time    : 2025/7/19 20:54
+@Author  : ccckz@protonmail.com
 @File    : __init__.py.py
 """
 from .duckduckgo_search import duckduckgo_search

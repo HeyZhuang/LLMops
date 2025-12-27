@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/28 15:34
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/28 15:34
+@Author  : ccckz@protonmail.com
 @File    : workflow_schema.py
 """
 from flask_wtf import FlaskForm

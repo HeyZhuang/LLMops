@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/10/25 22:40
-@Author  : thezehui@gmail.com
+@Time    : 2025/10/25 22:40
+@Author  : ccckz@protonmail.com
 @File    : password.py
 """
 import base64

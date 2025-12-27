@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/11/19 22:21
-@Author  : thezehui@gmail.com
+@Time    : 2025/11/19 22:21
+@Author  : ccckz@protonmail.com
 @File    : openapi_service.py
 """
 import json

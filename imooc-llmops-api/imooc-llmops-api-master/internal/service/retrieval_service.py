@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/09/18 14:54
-@Author  : thezehui@gmail.com
+@Time    : 2025/09/18 14:54
+@Author  : ccckz@protonmail.com
 @File    : retrieval_service.py
 """
 from dataclasses import dataclass

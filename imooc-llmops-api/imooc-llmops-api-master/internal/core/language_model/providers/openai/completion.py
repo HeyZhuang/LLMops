@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/01 11:49
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/01 11:49
+@Author  : ccckz@protonmail.com
 @File    : completion.py
 """
 from langchain_openai import OpenAI

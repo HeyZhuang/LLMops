@@ -3,7 +3,7 @@ import { onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { type Form, Message } from '@arco-design/web-vue'
 import { useCreateDocuments, useGetDocumentsStatus } from '@/hooks/use-dataset'
-import { useUploadFile } from '@/hooks/use-upload-file'
+import { uploadFile } from '@/services/upload-file'
 import { unescapeString } from '@/utils/helper'
 import type { CreateDocumentsRequest } from '@/models/dataset'
 
@@ -17,7 +17,6 @@ const {
   create_documents_result,
   handleCreateDocuments,
 } = useCreateDocuments()
-const { upload_file, handleUploadFile } = useUploadFile()
 const { documents_status_result, loadDocumentsStatus } = useGetDocumentsStatus()
 const currentStep = ref(1)
 const createDocumentsForm = ref<Record<string, any>>({
@@ -65,10 +64,12 @@ const nextStep = async () => {
     // 2.7 如果校验成功或者是自动规则，则执行下一步
     try {
       // 2.8 将加载状态设置为true，并将表单数据转换成api接口数据
+      const uploadFileIds = createDocumentsForm.value.file_list.map(
+        (fileItem: any) => fileItem?.response?.id,
+      )
+      console.log('提取到的文件ID列表:', uploadFileIds)
       const req: Record<string, any> = {
-        upload_file_ids: createDocumentsForm.value.file_list.map(
-          (fileItem: any) => fileItem?.response?.data?.id,
-        ),
+        upload_file_ids: uploadFileIds,
         process_type: createDocumentsForm.value.process_type,
       }
 
@@ -149,7 +150,6 @@ onUnmounted(() => stopTimer())
 
 <template>
   <div class="p-6">
-    {{ upload_file }}
     <!-- 回退按钮与标题 -->
     <div class="flex items-center mb-6 gap-4">
       <!-- 左侧回退按钮 -->
@@ -194,8 +194,14 @@ onUnmounted(() => stopTimer())
 
               const uploadTask = async () => {
                 try {
-                  await handleUploadFile(fileItem.file as File)
-                  onSuccess(upload_file)
+                  // 直接调用上传服务，获取响应数据
+                  const resp = await uploadFile(fileItem.file as File)
+                  // resp.data 包含 { id, account_id, name, size, ... }
+                  const fileData = resp.data
+                  const fileId = fileData.id
+                  console.log('提取到的文件ID:', fileId)
+                  // 将 data 部分传给 onSuccess，这样 fileItem.response 就是 { id, ... }
+                  onSuccess(fileData)
                 } catch (error) {
                   onError(error)
                 }

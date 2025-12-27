@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@Time    : 2024/12/01 17:54
-@Author  : thezehui@gmail.com
+@Time    : 2025/12/01 17:54
+@Author  : ccckz@protonmail.com
 @File    : chat.py
 """
 from langchain_community.chat_models.baidu_qianfan_endpoint import QianfanChatEndpoint
