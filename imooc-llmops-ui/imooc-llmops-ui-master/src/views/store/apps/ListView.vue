@@ -113,7 +113,7 @@ onMounted(() => {
                 <icon-user />
               </a-avatar>
               <div class="text-xs text-gray-400">
-                LLMOps-Platform  · 发布时间
+                {{ app.author }}  · 发布时间
                 {{ moment(app.created_at * 1000).format('MM-DD HH:mm') }}
               </div>
             </div>

@@ -47,8 +47,10 @@ class BuiltinAppService(BaseService):
             # 3.创建应用信息
             app = App(
                 account_id=account.id,
+                name=builtin_app.name,
+                icons=builtin_app.icon,
+                description=builtin_app.description,
                 status=AppStatus.DRAFT,
-                **builtin_app.model_dump(include={"name", "icon", "description"})
             )
             self.db.session.add(app)
             self.db.session.flush()

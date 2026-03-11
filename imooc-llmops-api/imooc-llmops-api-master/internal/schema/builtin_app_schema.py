@@ -32,12 +32,13 @@ class GetBuiltinAppsResp(Schema):
     icon = fields.String(dump_default="")
     description = fields.String(dump_default="")
     model_config = fields.Dict(dump_default={})
+    author = fields.String(dump_default="")
     created_at = fields.Integer(dump_default=0)
 
     @pre_dump
     def process_data(self, data: BuiltinAppEntity, **kwargs):
         return {
-            **data.model_dump(include={"id", "category", "name", "icon", "description", "created_at"}),
+            **data.model_dump(include={"id", "category", "name", "icon", "description", "author", "created_at"}),
             "model_config": {
                 "provider": data.language_model_config.get("provider", ""),
                 "model": data.language_model_config.get("model", ""),

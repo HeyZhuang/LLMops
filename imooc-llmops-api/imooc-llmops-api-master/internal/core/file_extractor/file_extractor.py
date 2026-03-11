@@ -15,13 +15,13 @@ import requests
 from injector import inject
 from langchain_community.document_loaders import (
     UnstructuredExcelLoader,
-    UnstructuredPDFLoader,
     UnstructuredMarkdownLoader,
     UnstructuredHTMLLoader,
     UnstructuredCSVLoader,
     UnstructuredPowerPointLoader,
     UnstructuredXMLLoader,
     UnstructuredFileLoader,
+    PyPDFLoader,
     TextLoader,
 )
 from langchain_core.documents import Document as LCDocument
@@ -85,7 +85,7 @@ class FileExtractor:
         if file_extension in [".xlsx", ".xls"]:
             loader = UnstructuredExcelLoader(file_path)
         elif file_extension == ".pdf":
-            loader = UnstructuredPDFLoader(file_path, strategy="fast")
+            loader = PyPDFLoader(file_path)
         elif file_extension in [".md", ".markdown"]:
             loader = UnstructuredMarkdownLoader(file_path)
         elif file_extension in [".htm", ".html"]:

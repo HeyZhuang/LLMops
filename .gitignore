@@ -1,2 +1,35 @@
 __pycache__/
-*.pyc.idea/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Python virtualenv
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keys and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+credentials.json

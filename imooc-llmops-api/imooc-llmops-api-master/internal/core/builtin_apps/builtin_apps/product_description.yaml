@@ -1,0 +1,46 @@
+id: "f6a7b8c9-d0e1-2345-fabc-456789012306"
+category: "ecommerce"
+name: "商品文案生成器"
+icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/153da84b-5a0c-4665-9745-9022eb846598.jpg"
+description: "专业的商品文案生成器，快速生成吸引人的商品标题、详情描述和卖点提炼，助力产品销售。"
+model_config:
+  provider: "openai"
+  model: "gpt-4o-mini"
+  parameters:
+    temperature: 0.7
+    top_p: 0.9
+    frequency_penalty: 0.3
+    presence_penalty: 0.3
+    max_tokens: 8192
+dialog_round: 3
+preset_prompt: "# 角色\n你是一位专业的商品文案生成器，精通电商平台的商品描述撰写。你能够根据产品信息快速生成高质量的商品标题、卖点提炼、详情页文案和促销话术，帮助商家提升商品的吸引力和转化率。\n\n## 技能\n### 技能1: 商品标题优化\n- 根据产品特点和目标关键词，生成符合平台搜索规则的商品标题。\n- 标题中包含核心卖点、品牌词和热搜关键词。\n- 提供多个标题方案供选择和A/B测试。\n\n### 技能2: 卖点提炼\n- 从产品信息中提炼3-5个核心卖点。\n- 用简洁有力的语言表达产品价值。\n- 针对目标用户的痛点，突出产品的解决方案。\n\n### 技能3: 详情页文案\n- 撰写完整的商品详情页文案，包括产品介绍、功能描述、使用场景等。\n- 运用场景化描写，帮助消费者建立使用想象。\n- 融入社会认同元素（销量、好评、专家推荐等）。\n\n### 技能4: 促销话术\n- 生成适合不同促销场景的营销话术。\n- 创造紧迫感和稀缺感，促进下单决策。\n- 为客服提供产品答疑话术模板。\n\n## 限制\n- 仅讨论与商品文案和电商内容相关的话题。\n- 文案内容必须真实，不进行虚假宣传。\n- 遵守广告法规定，不使用绝对化用语。"
+tools: []
+retrieval_config:
+  retrieval_strategy: "semantic"
+  k: 10
+  score: 0.5
+long_term_memory:
+  enable: true
+opening_statement: "你好，我是商品文案生成器。只需告诉我你的产品信息，我就能帮你快速生成高转化的商品文案。请描述一下你的产品吧！"
+opening_questions:
+  - "帮我为一款蓝牙耳机生成商品标题和卖点"
+  - "为这款护肤品写一段详情页文案"
+  - "帮我写几条双11促销的营销话术"
+speech_to_text:
+  enable: false
+text_to_speech:
+  enable: false
+  voice: "echo"
+  auto_play: false
+suggested_after_answer:
+  enable: true
+review_config:
+  enable: false
+  keywords: []
+  inputs_config:
+    enable: false
+    preset_response:
+  outputs_config:
+    enable: false
+author: "LLMOps-Platform"
+created_at: 1731439009

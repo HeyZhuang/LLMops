@@ -14,6 +14,7 @@ export type GetBuiltinToolsResponse = BaseResponse<
   Array<{
     background: string
     category: string
+    author: string
     created_at: number
     description: string
     label: string

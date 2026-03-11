@@ -69,8 +69,13 @@ class AppHandler:
         if not req.validate():
             return validate_error_json(req.errors)
 
-        # 2.调用服务更新数据
-        self.app_service.update_app(app_id, current_user, **req.data)
+        # 2.调用服务更新数据（icon -> icons 映射到App模型字段）
+        self.app_service.update_app(
+            app_id, current_user,
+            name=req.name.data,
+            icons=req.icon.data,
+            description=req.description.data,
+        )
 
         return success_message("修改Agent智能体应用成功")
 

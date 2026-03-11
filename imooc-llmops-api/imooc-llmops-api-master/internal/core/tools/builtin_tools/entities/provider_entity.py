@@ -23,6 +23,7 @@ class ProviderEntity(BaseModel):
     icon: str  # 图标地址
     background: str  # 图标的颜色
     category: str  # 分类信息
+    author: str = "LLMOps-Platform"  # 提供商作者
     created_at: int = 0  # 提供商/工具的创建时间戳
 
 

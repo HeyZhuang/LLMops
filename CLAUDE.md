@@ -47,8 +47,8 @@ python migrate_db.py                  # 迁移
 python create_user.py                 # 创建用户
 
 # Celery异步任务
-celery -A app.celery worker --loglevel=info             # Linux/Mac
-celery -A app.celery worker --loglevel=info --pool=solo # Windows
+celery -A app.http.app:celery worker --loglevel=info             # Linux/Mac
+celery -A app.http.app:celery worker --loglevel=info --pool=solo # Windows
 ```
 
 ### 前端（Vue 3）

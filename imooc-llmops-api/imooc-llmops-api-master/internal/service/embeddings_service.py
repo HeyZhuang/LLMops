@@ -5,16 +5,49 @@
 @Author  : ccckz@protonmail.com
 @File    : embeddings_service.py
 """
+import json
 import os
 from dataclasses import dataclass
+from typing import List
 
+import requests
 import tiktoken
 from injector import inject
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.storage import RedisStore
 from langchain_core.embeddings import Embeddings
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from redis import Redis
+
+
+class HuggingFaceRouterEmbeddings(Embeddings):
+    """通过 requests 直接调用 HuggingFace Router Inference API 的 Embeddings 实现，
+    不依赖 huggingface_hub / langchain-huggingface 的版本。"""
+
+    def __init__(self, model: str, api_token: str, api_url: str = "https://router.huggingface.co"):
+        self.model = model
+        self.api_url = api_url.rstrip("/")
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        }
+
+    def _post(self, payload: dict) -> list:
+        """发送请求到 HuggingFace Inference API"""
+        url = f"{self.api_url}/hf-inference/models/{self.model}"
+        response = requests.post(url, headers=self.headers, json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        texts = [text.replace("\n", " ") for text in texts]
+        result = self._post({"inputs": texts})
+        # 批量文本返回 list[list[float]]，直接返回
+        return result
+
+    def embed_query(self, text: str) -> List[float]:
+        result = self._post({"inputs": text})
+        # 单文本返回 list[float]（1024维扁平数组），直接返回
+        return result
 
 
 @inject
@@ -37,11 +70,11 @@ class EmbeddingsService:
                 "Please set it with your Hugging Face Access Token. "
                 "Get your token from: https://huggingface.co/settings/tokens"
             )
-        
-        self._embeddings = HuggingFaceEndpointEmbeddings(
+
+        self._embeddings = HuggingFaceRouterEmbeddings(
             model="intfloat/multilingual-e5-large",
-            task="feature-extraction",
-            huggingfacehub_api_token=huggingface_api_token,
+            api_token=huggingface_api_token,
+            api_url=os.getenv("HF_INFERENCE_ENDPOINT", "https://router.huggingface.co"),
         )
         # 使用本地 Hugging Face 模型（已弃用，会消耗本地算力）
         # self._embeddings = HuggingFaceEmbeddings(
