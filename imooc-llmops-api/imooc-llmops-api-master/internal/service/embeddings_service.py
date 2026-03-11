@@ -39,7 +39,7 @@ class EmbeddingsService:
             )
         
         self._embeddings = HuggingFaceEndpointEmbeddings(
-            model="Alibaba-NLP/gte-multilingual-base",
+            model="intfloat/multilingual-e5-large",
             task="feature-extraction",
             huggingfacehub_api_token=huggingface_api_token,
         )

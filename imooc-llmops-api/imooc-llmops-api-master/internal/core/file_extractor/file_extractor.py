@@ -85,7 +85,7 @@ class FileExtractor:
         if file_extension in [".xlsx", ".xls"]:
             loader = UnstructuredExcelLoader(file_path)
         elif file_extension == ".pdf":
-            loader = UnstructuredPDFLoader(file_path)
+            loader = UnstructuredPDFLoader(file_path, strategy="fast")
         elif file_extension in [".md", ".markdown"]:
             loader = UnstructuredMarkdownLoader(file_path)
         elif file_extension in [".htm", ".html"]:

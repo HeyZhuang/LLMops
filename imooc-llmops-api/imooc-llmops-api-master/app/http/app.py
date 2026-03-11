@@ -5,6 +5,7 @@
 @Author  : ccckz@protonmail.com
 @File    : app.py
 """
+import os
 import dotenv
 from flask_login import LoginManager
 from flask_migrate import Migrate
@@ -18,6 +19,11 @@ from .module import injector
 
 # 1.将env加载到环境变量中
 dotenv.load_dotenv()
+
+# 将poppler加入PATH（Windows PDF解析依赖）
+poppler_path = r"D:\dev\poppler\poppler-24.08.0\Library\bin"
+if poppler_path not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = poppler_path + os.pathsep + os.environ.get("PATH", "")
 
 # 2.构建LLMOps项目配置
 conf = Config()

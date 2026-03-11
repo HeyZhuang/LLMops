@@ -55,7 +55,7 @@ class Account(UserMixin, db.Model):
         """只读属性，返回当前账号的辅助Agent会话"""
         # 1.获取辅助Agent应用id
         assistant_agent_id = current_app.config.get("ASSISTANT_AGENT_ID")
-        conversation = db.session.query(Conversation).get(
+        conversation = db.session.get(Conversation,
             self.assistant_agent_conversation_id
         ) if self.assistant_agent_conversation_id else None
 

@@ -92,4 +92,8 @@ def compact_generate_response(response: Union[Response, Generator]) -> FlaskResp
             stream_with_context(generate()),
             status=200,
             mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
         )

@@ -12,6 +12,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from werkzeug.exceptions import HTTPException
 
 from config import Config
 from internal.exception import CustomException
@@ -72,10 +73,18 @@ class Http(Flask):
         router.register_router(self)
 
     def _register_error_handler(self, error: Exception):
-        # 1.日志记录异常信息
+        # 1.如果是HTTP异常（404/405等），直接返回对应状态码，不做额外处理
+        if isinstance(error, HTTPException):
+            return json(Response(
+                code=error.code,
+                message=error.description,
+                data={},
+            ))
+
+        # 2.日志记录异常信息
         logging.error("An error occurred: %s", error, exc_info=True)
 
-        # 2.异常信息是不是我们的自定义异常，如果是可以提取message和code等信息
+        # 3.异常信息是不是我们的自定义异常，如果是可以提取message和code等信息
         if isinstance(error, CustomException):
             return json(Response(
                 code=error.code,
@@ -83,12 +92,9 @@ class Http(Flask):
                 data=error.data if error.data is not None else {},
             ))
 
-        # 3.如果不是我们的自定义异常，则有可能是程序、数据库抛出的异常，也可以提取信息，设置为FAIL状态码
-        if self.debug or os.getenv("FLASK_ENV") == "development":
-            raise error
-        else:
-            return json(Response(
-                code=HttpCode.FAIL,
-                message=str(error),
-                data={},
-            ))
+        # 4.如果不是我们的自定义异常，则有可能是程序、数据库抛出的异常，也可以提取信息，设置为FAIL状态码
+        return json(Response(
+            code=HttpCode.FAIL,
+            message=str(error),
+            data={},
+        ))

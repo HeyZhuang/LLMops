@@ -53,6 +53,8 @@ class CosService:
             # 5.将数据上传到cos存储桶中
             client.put_object(bucket, file_content, upload_filename)
         except Exception as e:
+            import logging
+            logging.error("COS上传异常: %s", e, exc_info=True)
             raise FailException("上传文件失败，请稍后重试")
 
         # 6.创建upload_file记录
