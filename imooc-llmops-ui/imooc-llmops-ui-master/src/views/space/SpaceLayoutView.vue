@@ -29,15 +29,15 @@ watch(
 <template>
   <!-- 调整边距+隐藏 -->
   <div class="px-6 flex flex-col overflow-hidden h-full">
-    <div class="pt-6 sticky top-0 z-20 bg-gray-50">
+    <div class="pt-6 sticky top-0 z-20 linen-bg">
       <!-- 顶层标题+创建按钮 -->
       <div class="flex items-center justify-between mb-6">
         <!-- 左侧标题 -->
-        <div class="flex items-center gap-2">
-          <a-avatar :size="32" class="bg-blue-700">
+        <div class="flex items-center gap-3">
+          <a-avatar :size="32" class="!bg-abyss-800 !text-gold-400">
             <icon-user :size="18" />
           </a-avatar>
-          <div class="text-lg font-medium text-gray-900">个人空间</div>
+          <div class="text-lg font-semibold text-abyss-800">个人空间</div>
         </div>
         <!-- 创建按钮 -->
         <a-button
@@ -76,32 +76,32 @@ watch(
       <!-- 导航按钮+搜索框 -->
       <div class="flex items-center justify-between mb-6">
         <!-- 左侧导航 -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 p-1 rounded-lg bg-parchment-300/50">
           <router-link
             to="/space/apps"
-            class="rounded-lg text-gray-700 px-3 h-8 leading-8 hover:bg-gray-200 transition-all"
-            active-class="bg-gray-100"
+            class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
+            active-class="!bg-white !text-gold-600 shadow-sm font-medium"
           >
             AI应用
           </router-link>
           <router-link
             to="/space/tools"
-            class="rounded-lg text-gray-700 px-3 h-8 leading-8 hover:bg-gray-200 transition-all"
-            active-class="bg-gray-100"
+            class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
+            active-class="!bg-white !text-gold-600 shadow-sm font-medium"
           >
             插件
           </router-link>
           <router-link
             to="/space/workflows"
-            class="rounded-lg text-gray-700 px-3 h-8 leading-8 hover:bg-gray-200 transition-all"
-            active-class="bg-gray-100"
+            class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
+            active-class="!bg-white !text-gold-600 shadow-sm font-medium"
           >
             工作流
           </router-link>
           <router-link
             to="/space/datasets"
-            class="rounded-lg text-gray-700 px-3 h-8 leading-8 hover:bg-gray-200 transition-all"
-            active-class="bg-gray-100"
+            class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
+            active-class="!bg-white !text-gold-600 shadow-sm font-medium"
           >
             知识库
           </router-link>
@@ -110,7 +110,7 @@ watch(
         <a-input-search
           v-model="searchWord"
           placeholder="输入关键词进行搜索"
-          class="w-[240px] bg-white rounded-lg border-gray-300"
+          class="w-[240px] rounded-lg"
           @search="search"
         />
       </div>
@@ -120,4 +120,16 @@ watch(
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.arco-input-wrapper) {
+  background: rgba(248,245,240,0.8) !important;
+  border: 1px solid rgba(212,175,55,0.12) !important;
+}
+:deep(.arco-input-wrapper:hover) {
+  border-color: rgba(212,175,55,0.3) !important;
+}
+:deep(.arco-input-wrapper.arco-input-focus) {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.08) !important;
+}
+</style>

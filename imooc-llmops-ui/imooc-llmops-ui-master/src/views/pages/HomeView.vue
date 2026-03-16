@@ -11,7 +11,6 @@ import {
 } from '@/hooks/use-assistant-agent'
 import { useGenerateSuggestedQuestions } from '@/hooks/use-ai'
 import { useAccountStore } from '@/stores/account'
-import AssistantAgentBackground from '@/assets/images/assistant-agent-background.png'
 import { Message } from '@arco-design/web-vue'
 import { QueueEvent } from '@/config'
 import HumanMessage from '@/components/HumanMessage.vue'
@@ -29,7 +28,7 @@ const { suggested_questions, handleGenerateSuggestedQuestions } = useGenerateSug
 const { loading: assistantAgentChatLoading, handleAssistantAgentChat } = useAssistantAgentChat()
 const {
   loading: stopAssistantAgentChatLoading,
-  handleStopAssistantAgentChat, //
+  handleStopAssistantAgentChat,
 } = useStopAssistantAgentChat()
 const {
   loading: getAssistantAgentMessagesWithPageLoading,
@@ -38,7 +37,7 @@ const {
 } = useGetAssistantAgentMessagesWithPage()
 const {
   loading: deleteAssistantAgentConversationLoading,
-  handleDeleteAssistantAgentConversation, //
+  handleDeleteAssistantAgentConversation,
 } = useDeleteAssistantAgentConversation()
 
 // 2.定义保存滚动高度函数
@@ -63,24 +62,17 @@ const handleScroll = async (event: UIEvent) => {
 
 // 5.定义输入框提交函数
 const handleSubmit = async () => {
-  // 5.1 检测是否录入了query，如果没有则结束
   if (query.value.trim() === '') {
     Message.warning('用户提问不能为空')
     return
   }
-
-  // 5.2 检测上次提问是否结束，如果没结束不能发起新提问
   if (assistantAgentChatLoading.value) {
     Message.warning('上一次提问还未结束，请稍等')
     return
   }
-
-  // 5.3 满足条件，处理正式提问的前置工作，涵盖：清空建议问题、删除消息id、任务id
   suggested_questions.value = []
   message_id.value = ''
   task_id.value = ''
-
-  // 5.4 往消息列表中添加基础人类消息
   messages.value.unshift({
     id: '',
     conversation_id: '',
@@ -91,36 +83,23 @@ const handleSubmit = async () => {
     agent_thoughts: [],
     created_at: 0,
   })
-
-  // 5.5 初始化推理过程数据，并清空输入数据
   let position = 0
   const humanQuery = query.value
   query.value = ''
-
-  // 5.6 调用hooks发起请求
   await handleAssistantAgentChat(humanQuery, (event_response) => {
-    // 5.7 提取流式事件响应数据以及事件名称
     const event = event_response?.event
     const data = event_response?.data
     const event_id = data?.id
     let agent_thoughts = messages.value[0].agent_thoughts
-
-    // 5.8 初始化数据检测与赋值
     if (message_id.value === '' && data?.message_id) {
       task_id.value = data?.task_id
       message_id.value = data?.message_id
       messages.value[0].id = data?.message_id
       messages.value[0].conversation_id = data?.conversation_id
     }
-
-    // 5.9 循环处理得到的事件，记录除ping之外的事件
     if (event !== QueueEvent.ping) {
-      // 5.10 除了agent_message数据为叠加，其他均为覆盖
       if (event === QueueEvent.agentMessage) {
-        // 5.11 获取数据索引并检测是否存在
         const agent_thought_idx = agent_thoughts.findIndex((item) => item?.id === event_id)
-
-        // 5.12 数据不存在则添加
         if (agent_thought_idx === -1) {
           position += 1
           agent_thoughts.push({
@@ -135,26 +114,20 @@ const handleSubmit = async () => {
             created_at: 0,
           })
         } else {
-          // 5.13 存在数据则叠加
           agent_thoughts[agent_thought_idx] = {
             ...agent_thoughts[agent_thought_idx],
             thought: agent_thoughts[agent_thought_idx]?.thought + data?.thought,
             latency: data?.latency,
           }
         }
-
-        // 5.14 更新/添加answer答案
         messages.value[0].answer += data?.thought
         messages.value[0].latency = data?.latency
         messages.value[0].total_token_count = data?.total_token_count
       } else if (event === QueueEvent.error) {
-        // 5.15 事件为error，将错误信息(observation)填充到消息答案中进行展示
         messages.value[0].answer = data?.observation
       } else if (event === QueueEvent.timeout) {
-        // 5.16 事件为timeout，则人工提示超时信息
         messages.value[0].answer = '当前Agent执行已超时，无法得到答案，请重试'
       } else {
-        // 5.15 处理其他类型的事件，直接填充覆盖数据
         position += 1
         agent_thoughts.push({
           id: event_id,
@@ -168,43 +141,36 @@ const handleSubmit = async () => {
           created_at: 0,
         })
       }
-
-      // 5.16 更新agent_thoughts
       messages.value[0].agent_thoughts = agent_thoughts
-
       scroller.value.scrollToBottom()
     }
   })
-
-  // 5.7 流式响应完成后，重新加载消息列表以确保数据同步和视图更新
-    await loadAssistantAgentMessages(true)
-    await nextTick(() => {
-            if (scroller.value) {
-            scroller.value.scrollToBottom()
-  }
-})
-  // 5.8 发起API请求获取建议问题列表
+  await nextTick(() => {
+    if (scroller.value) {
+      scroller.value.scrollToBottom()
+    }
+  })
+  // 延迟刷新消息列表，等待后端save线程完成数据库写入
+  setTimeout(() => loadAssistantAgentMessages(true), 1500)
   if (message_id.value) {
-    await handleGenerateSuggestedQuestions(message_id.value)
+    try {
+      await handleGenerateSuggestedQuestions(message_id.value)
+    } catch {
+      // 建议问题生成失败不影响主流程
+    }
     setTimeout(() => scroller.value && scroller.value.scrollToBottom(), 100)
   }
 }
 
 // 6.定义停止调试会话函数
 const handleStop = async () => {
-  // 6.1 如果没有任务id或者未在加载中，则直接停止
   if (task_id.value === '' || !assistantAgentChatLoading.value) return
-
-  // 6.2 调用api接口中断请求
   await handleStopAssistantAgentChat(task_id.value)
 }
 
 // 7.定义问题提交函数
 const handleSubmitQuestion = async (question: string) => {
-  // 1.将问题同步到query中
   query.value = question
-
-  // 2.触发handleSubmit函数
   await handleSubmit()
 }
 
@@ -212,7 +178,6 @@ const handleSubmitQuestion = async (question: string) => {
 onMounted(async () => {
   await loadAssistantAgentMessages(true)
   await nextTick(() => {
-    // 确保在视图更新完成后执行滚动操作
     if (scroller.value) {
       scroller.value.scrollToBottom()
     }
@@ -221,10 +186,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    class="w-full h-full min-h-screen bg-gray-100 bg-cover bg-no-repeat bg-center"
-    :style="{ backgroundImage: `url(${AssistantAgentBackground})` }"
-  >
+  <div class="w-full h-full min-h-screen linen-bg">
     <!-- 中间页面信息 -->
     <div class="w-[600px] h-full min-h-screen mx-auto">
       <!-- 历史对话列表 -->
@@ -251,7 +213,7 @@ onMounted(async () => {
                   :loading="item.id === message_id && assistantAgentChatLoading"
                   :latency="item.latency"
                   :total_token_count="item.total_token_count"
-                  message_class="bg-white"
+                  message_class="!bg-parchment-100"
                   @select-suggested-question="handleSubmitQuestion"
                 />
               </div>
@@ -265,7 +227,7 @@ onMounted(async () => {
         >
           <a-button
             :loading="stopAssistantAgentChatLoading"
-            class="rounded-lg px-2"
+            class="rounded-lg px-2 !border-gold-dim !text-abyss-600 hover:!border-gold-bright hover:!text-gold-500"
             @click="handleStop"
           >
             <template #icon>
@@ -281,57 +243,57 @@ onMounted(async () => {
         class="flex flex-col p-6 gap-2 items-center justify-center overflow-scroll scrollbar-w-none h-[calc(100%-100px)] min-h-[calc(100vh-100px)]"
       >
         <div class="mb-9">
-          <div class="text-[40px] font-bold text-gray-700 mt-[52px] mb-4">
-            Hi，我是LLMOps-Platform  AI 应用构建器
+          <div class="text-[40px] font-bold text-abyss-800 mt-[52px] mb-4">
+            Hi，我是LLMOps AI 应用构建器
           </div>
-          <div class="text-[30px] font-bold text-gray-700 mb-2">
+          <div class="text-[30px] font-bold text-abyss-700 mb-2">
             你的专属
-            <span class="text-blue-700">AI 原生应用</span>
+            <span class="text-gold-shine">AI 原生应用</span>
             开发平台
           </div>
-          <div class="text-base text-gray-700">
-            说出你的创意，我可以快速帮你创建专属应用，一键轻松分享给朋友，也可以一键发布到LLMOps-Platform 
+          <div class="text-base text-abyss-500">
+            说出你的创意，我可以快速帮你创建专属应用，一键轻松分享给朋友，也可以一键发布到
             LLMOps 平台、微信等多个渠道。
           </div>
         </div>
         <!-- 开场AI对话消息 -->
         <div class="flex gap-2">
           <!-- 左侧图标 -->
-          <a-avatar :size="30" shape="circle" class="flex-shrink-0 bg-blue-700">
+          <a-avatar :size="30" shape="circle" class="flex-shrink-0 !bg-abyss-800 !text-gold-400">
             <icon-apps />
           </a-avatar>
           <!-- 右侧名称与消息 -->
           <div class="flex flex-col items-start gap-2">
             <!-- 应用名称 -->
-            <div class="text-gray-700 font-bold">辅助Agent</div>
+            <div class="text-abyss-700 font-bold">辅助Agent</div>
             <!-- AI消息 -->
             <div
-              class="bg-white border border-gray-200 text-gray-700 px-4 py-3 rounded-2xl break-all leading-7"
+              class="glass metal-border text-abyss-700 px-4 py-3 rounded-2xl break-all leading-7"
             >
-              <div class="font-bold">你好，欢迎来到LLMOps-Platform LLMOps🎉</div>
+              <div class="font-bold">你好，欢迎来到 LLMOps</div>
               <div class="">
-                LLMOps-Platform LLMOps是新一代大模型 AI 应用开发平台。无论你是否有编程基础，都可以快速搭建出各种
+                LLMOps 是新一代大模型 AI 应用开发平台。无论你是否有编程基础，都可以快速搭建出各种
                 AI 应用，并一键发布到各大社交平台，或者轻松部署到自己的网站。
               </div>
-              <ul class="list-disc pl-6">
+              <ul class="list-disc pl-6 mt-2">
                 <li>
                   随时来
-                  <router-link :to="{ name: 'store-apps-list' }" class="text-blue-700"
+                  <router-link :to="{ name: 'store-apps-list' }" class="text-gold-500 hover:text-gold-600 font-medium"
                     >应用广场
                   </router-link>
                   逛逛，这里内置了许多超有趣的应用。
                 </li>
-                <li>你也可以直接发送“我想做一个应用”，我可以帮你快速创建应用。</li>
+                <li>你也可以直接发送"我想做一个应用"，我可以帮你快速创建应用。</li>
                 <li>你也可以向我提问有关课程的问题，我可以快速替你解答。</li>
               </ul>
-              <div class="">如果你还有其他LLMOps-Platform LLMOps使用问题，也欢迎随时问我！</div>
+              <div class="mt-2">如果你还有其他 LLMOps 使用问题，也欢迎随时问我！</div>
             </div>
             <!-- 开场白建议问题 -->
             <div class="flex flex-col gap-2">
               <div
                 v-for="(opening_question, idx) in opening_questions"
                 :key="idx"
-                class="px-4 py-1.5 border rounded-lg text-gray-700 cursor-pointer bg-white hover:bg-gray-50"
+                class="px-4 py-1.5 border border-gold-dim rounded-lg text-abyss-600 cursor-pointer bg-parchment-100 hover:bg-gold-50 hover:border-gold-bright transition-all"
                 @click="async () => await handleSubmitQuestion(opening_question)"
               >
                 {{ opening_question }}
@@ -347,18 +309,13 @@ onMounted(async () => {
           <!-- 清除按钮 -->
           <a-button
             :loading="deleteAssistantAgentConversationLoading"
-            class="flex-shrink-0 !text-gray-700"
+            class="flex-shrink-0 !text-abyss-400 hover:!text-gold-500"
             type="text"
             shape="circle"
             @click="
               async () => {
-                // 1.先调用停止响应接口
                 await handleStop()
-
-                // 2.调用api接口清空会话
                 await handleDeleteAssistantAgentConversation()
-
-                // 3.重新获取数据
                 await loadAssistantAgentMessages(true)
               }
             "
@@ -369,12 +326,12 @@ onMounted(async () => {
           </a-button>
           <!-- 输入框组件 -->
           <div
-            class="bg-white h-[50px] flex items-center gap-2 px-4 flex-1 border border-gray-200 rounded-full"
+            class="glass h-[50px] flex items-center gap-2 px-4 flex-1 border border-gold-dim rounded-full shadow-gold-sm hover:shadow-gold-md transition-shadow"
           >
             <input
               v-model="query"
               type="text"
-              class="flex-1 outline-0"
+              class="flex-1 outline-0 bg-transparent text-abyss-700 placeholder:text-abyss-300"
               placeholder="发送消息或创建AI应用..."
               @keyup.enter="handleSubmit"
             />
@@ -382,7 +339,7 @@ onMounted(async () => {
               :loading="assistantAgentChatLoading"
               type="text"
               shape="circle"
-              class="!text-gray-700"
+              class="!text-gold-500 hover:!text-gold-600"
               @click="handleSubmit"
             >
               <template #icon>
@@ -392,7 +349,7 @@ onMounted(async () => {
           </div>
         </div>
         <!-- 底部提示信息 -->
-        <div class="text-center text-gray-500 text-xs py-4">
+        <div class="text-center text-abyss-300 text-xs py-4">
           内容由AI生成，无法确保真实准确，仅供参考。
         </div>
       </div>

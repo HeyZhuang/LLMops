@@ -28,13 +28,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex-1 w-full min-h-0 bg-white">
+  <div class="flex-1 w-full min-h-0 linen-bg">
     <div class="flex-1 grid grid-cols-[26fr_14fr] h-full w-full">
       <!-- 左侧应用编排 -->
-      <div class="bg-gray-50 flex flex-col h-full">
+      <div class="flex flex-col h-full">
         <!-- 顶部标题 -->
-        <div class="flex items-center h-16 border-b p-4 gap-4">
-          <div class="text-lg text-gray-700">应用编排</div>
+        <div class="flex items-center h-16 border-b border-gold-dim p-4 gap-4">
+          <div class="text-lg text-abyss-800 font-semibold">应用编排</div>
           <!-- LLM模型配置 -->
           <model-config
             :dialog_round="draftAppConfigForm.dialog_round"
@@ -45,7 +45,7 @@ onMounted(async () => {
         <!-- 底部编排区域 -->
         <div class="grid grid-cols-[13fr_13fr] overflow-hidden h-[calc(100vh-141px)]">
           <!-- 左侧人设与回复逻辑 -->
-          <div class="border-r py-4">
+          <div class="border-r border-gold-dim py-4">
             <preset-prompt-textarea
               v-model:preset_prompt="draftAppConfigForm.preset_prompt"
               :app_id="String(route.params?.app_id)"
@@ -59,7 +59,7 @@ onMounted(async () => {
         </div>
       </div>
       <!-- 右侧调试与会话 -->
-      <div class="min-w-[404px]">
+      <div class="min-w-[404px] border-l border-gold-dim">
         <!-- 头部信息 -->
         <preview-debug-header
           :app_id="String(route.params?.app_id)"

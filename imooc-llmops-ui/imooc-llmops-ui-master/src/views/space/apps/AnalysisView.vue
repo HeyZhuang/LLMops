@@ -29,21 +29,14 @@ const trendOption = computed(() => {
     return fields.reduce(
       (acc, field) => {
         acc[field] = {
-          // 网格选项，设置上下左右间距
-          grid: {
-            top: 20,
-            bottom: 20,
-            left: 30,
-            right: 30,
-          },
-          // 工具提示信息，鼠标移动到选项时显示卡片信息
+          grid: { top: 20, bottom: 20, left: 30, right: 30 },
           tooltip: {
-            trigger: 'item', // 触发类型：'axis' 表示在坐标轴上触发，'item' 表示在数据项上触发
-            axisPointer: {
-              type: 'shadow', // 显示阴影指示器，表示在轴上
-            },
+            trigger: 'item',
+            axisPointer: { type: 'shadow' },
+            backgroundColor: 'rgba(15,23,42,0.9)',
+            borderColor: 'rgba(212,175,55,0.2)',
+            textStyle: { color: '#F8F5F0' },
           },
-          // x轴设置为类别，并且将时间戳转换成日期
           xAxis: {
             type: 'category',
             boundaryGap: false,
@@ -51,23 +44,36 @@ const trendOption = computed(() => {
               return moment(value * 1000).format('MMM D, YYYY')
             }),
             splitLine: {
-              show: true, // 显示垂直网格线
-              lineStyle: {
-                color: '#eeeeee', // 网格线颜色
-                width: 1, // 网格线宽度
-                type: 'solid', // 网格线类型，'solid', 'dashed', 'dotted'
-              },
+              show: true,
+              lineStyle: { color: 'rgba(212,175,55,0.06)', width: 1, type: 'dashed' },
             },
+            axisLine: { lineStyle: { color: 'rgba(212,175,55,0.15)' } },
+            axisLabel: { color: '#7c87a2' },
           },
-          // y轴数据为值
           yAxis: {
             type: 'value',
+            splitLine: {
+              lineStyle: { color: 'rgba(212,175,55,0.06)', type: 'dashed' },
+            },
+            axisLabel: { color: '#7c87a2' },
           },
-          // 添加y轴的数据系列
           series: [
             {
               data: app_analysis.value?.[field]?.y_axis,
               type: 'line',
+              smooth: true,
+              lineStyle: { color: '#D4AF37', width: 2 },
+              itemStyle: { color: '#D4AF37' },
+              areaStyle: {
+                color: {
+                  type: 'linear',
+                  x: 0, y: 0, x2: 0, y2: 1,
+                  colorStops: [
+                    { offset: 0, color: 'rgba(212,175,55,0.15)' },
+                    { offset: 1, color: 'rgba(212,175,55,0)' },
+                  ],
+                },
+              },
             },
           ],
         }
@@ -91,13 +97,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="px-6 py-5 overflow-scroll scrollbar-w-none">
+  <div class="px-6 py-5 overflow-scroll scrollbar-w-none linen-bg">
     <!-- 概览指标 -->
     <div class="flex flex-col gap-5 mb-5">
       <!-- 标题 -->
       <div class="flex items-baseline gap-1">
-        <div class="text-base text-gray-700 font-semibold">概览指标</div>
-        <div class="text-xs text-gray-500">(过去7天)</div>
+        <div class="text-base text-abyss-800 font-semibold">概览指标</div>
+        <div class="text-xs text-abyss-400">(过去7天)</div>
       </div>
       <!-- 指标卡片 -->
       <a-spin :loading="getAppAnalysisLoading">
@@ -110,7 +116,7 @@ onMounted(() => {
             :pop="app_analysis?.total_messages?.pop"
           >
             <template #icon>
-              <icon-dashboard class="text-black" />
+              <icon-dashboard class="text-gold-400" />
             </template>
           </overview-indicator>
           <overview-indicator
@@ -121,7 +127,7 @@ onMounted(() => {
             :pop="app_analysis?.active_accounts?.pop"
           >
             <template #icon>
-              <icon-computer class="text-black" />
+              <icon-computer class="text-gold-400" />
             </template>
           </overview-indicator>
           <overview-indicator
@@ -132,7 +138,7 @@ onMounted(() => {
             :pop="app_analysis?.avg_of_conversation_messages?.pop"
           >
             <template #icon>
-              <icon-bulb class="text-black" />
+              <icon-bulb class="text-gold-400" />
             </template>
           </overview-indicator>
           <overview-indicator
@@ -143,7 +149,7 @@ onMounted(() => {
             :pop="app_analysis?.token_output_rate?.pop"
           >
             <template #icon>
-              <icon-language class="text-black" />
+              <icon-language class="text-gold-400" />
             </template>
           </overview-indicator>
           <overview-indicator
@@ -154,7 +160,7 @@ onMounted(() => {
             :pop="app_analysis?.cost_consumption?.pop"
           >
             <template #icon>
-              <icon-code class="text-black" />
+              <icon-code class="text-gold-400" />
             </template>
           </overview-indicator>
         </div>
@@ -164,92 +170,58 @@ onMounted(() => {
     <div class="flex flex-col gap-5">
       <!-- 标题 -->
       <div class="flex items-baseline gap-1">
-        <div class="text-base text-gray-700 font-semibold">详细指标</div>
-        <div class="text-xs text-gray-500">(过去7天)</div>
+        <div class="text-base text-abyss-800 font-semibold">详细指标</div>
+        <div class="text-xs text-abyss-400">(过去7天)</div>
       </div>
       <!-- 可视化图表 -->
       <a-spin :loading="getAppAnalysisLoading">
         <div class="grid grid-cols-2 gap-4">
-          <div class="flex flex-col bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-            <!-- 标题 -->
+          <div class="flex flex-col glass metal-border rounded-xl p-5 h-[300px]">
             <div class="flex items-center gap-2 mb-1 flex-shrink-0">
-              <div class="text-gray-700 font-bold">全部会话数</div>
-              <a-tooltip
-                content="反映 AI 每天的会话消息总数，在指定的时间范围内，用户对应用发起的请求总次数，一问一答记一次，用于衡量用户活跃度。"
-              >
-                <icon-question-circle-fill />
+              <div class="text-abyss-800 font-bold">全部会话数</div>
+              <a-tooltip content="反映 AI 每天的会话消息总数，在指定的时间范围内，用户对应用发起的请求总次数，一问一答记一次，用于衡量用户活跃度。">
+                <icon-question-circle-fill class="text-gold-300" />
               </a-tooltip>
             </div>
-            <!-- 副标题 -->
-            <div class="text-gray-500 mb-1 flex-shrink-0">过去7天</div>
-            <!-- 可视化图表 -->
+            <div class="text-abyss-400 text-sm mb-1 flex-shrink-0">过去7天</div>
             <div class="w-full flex-1">
-              <v-chart
-                :init-options="{}"
-                :option="trendOption?.total_messages_trend"
-                :autoresize="true"
-              />
+              <v-chart :init-options="{}" :option="trendOption?.total_messages_trend" :autoresize="true" />
             </div>
           </div>
-          <div class="flex flex-col bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-            <!-- 标题 -->
+          <div class="flex flex-col glass metal-border rounded-xl p-5 h-[300px]">
             <div class="flex items-center gap-2 mb-1 flex-shrink-0">
-              <div class="text-gray-700 font-bold">活跃用户数</div>
-              <a-tooltip
-                content="指定的发布渠道和时间范围内，至少完成一轮对话的总使用用户数量，用于衡量应用吸引力。"
-              >
-                <icon-question-circle-fill />
+              <div class="text-abyss-800 font-bold">活跃用户数</div>
+              <a-tooltip content="指定的发布渠道和时间范围内，至少完成一轮对话的总使用用户数量，用于衡量应用吸引力。">
+                <icon-question-circle-fill class="text-gold-300" />
               </a-tooltip>
             </div>
-            <!-- 副标题 -->
-            <div class="text-gray-500 mb-1 flex-shrink-0">过去7天</div>
-            <!-- 可视化图表 -->
+            <div class="text-abyss-400 text-sm mb-1 flex-shrink-0">过去7天</div>
             <div class="w-full flex-1">
-              <v-chart
-                :init-options="{}"
-                :option="trendOption?.active_accounts_trend"
-                :autoresize="true"
-              />
+              <v-chart :init-options="{}" :option="trendOption?.active_accounts_trend" :autoresize="true" />
             </div>
           </div>
-          <div class="flex flex-col bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-            <!-- 标题 -->
+          <div class="flex flex-col glass metal-border rounded-xl p-5 h-[300px]">
             <div class="flex items-center gap-2 mb-1 flex-shrink-0">
-              <div class="text-gray-700 font-bold">平均会话互动数</div>
-              <a-tooltip
-                content="反映每个会话用户的持续沟通次数，如果用户与 AI 进行了 10 轮对话，即为 10，该指标反映了用户粘性。"
-              >
-                <icon-question-circle-fill />
+              <div class="text-abyss-800 font-bold">平均会话互动数</div>
+              <a-tooltip content="反映每个会话用户的持续沟通次数，如果用户与 AI 进行了 10 轮对话，即为 10，该指标反映了用户粘性。">
+                <icon-question-circle-fill class="text-gold-300" />
               </a-tooltip>
             </div>
-            <!-- 副标题 -->
-            <div class="text-gray-500 mb-1 flex-shrink-0">过去7天</div>
-            <!-- 可视化图表 -->
+            <div class="text-abyss-400 text-sm mb-1 flex-shrink-0">过去7天</div>
             <div class="w-full flex-1">
-              <v-chart
-                :init-options="{}"
-                :option="trendOption?.avg_of_conversation_messages_trend"
-                :autoresize="true"
-              />
+              <v-chart :init-options="{}" :option="trendOption?.avg_of_conversation_messages_trend" :autoresize="true" />
             </div>
           </div>
-          <div class="flex flex-col bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-            <!-- 标题 -->
+          <div class="flex flex-col glass metal-border rounded-xl p-5 h-[300px]">
             <div class="flex items-center gap-2 mb-1 flex-shrink-0">
-              <div class="text-gray-700 font-bold">费用消耗</div>
+              <div class="text-abyss-800 font-bold">费用消耗</div>
               <a-tooltip content="反映每日该应用请求语言模型的 Tokens 花费，用于成本控制。">
-                <icon-question-circle-fill />
+                <icon-question-circle-fill class="text-gold-300" />
               </a-tooltip>
             </div>
-            <!-- 副标题 -->
-            <div class="text-gray-500 mb-1 flex-shrink-0">过去7天</div>
-            <!-- 可视化图表 -->
+            <div class="text-abyss-400 text-sm mb-1 flex-shrink-0">过去7天</div>
             <div class="w-full flex-1">
-              <v-chart
-                :init-options="{}"
-                :option="trendOption?.cost_consumption_trend"
-                :autoresize="true"
-              />
+              <v-chart :init-options="{}" :option="trendOption?.cost_consumption_trend" :autoresize="true" />
             </div>
           </div>
         </div>

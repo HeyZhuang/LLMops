@@ -16,18 +16,18 @@ const visible = ref(false)
 
 <template>
   <!-- 智能体推理步骤 -->
-  <div :class="`flex flex-col rounded-2xl border ${visible ? 'w-[320px]' : 'w-[180px]'}`">
+  <div :class="`flex flex-col rounded-2xl border border-gold-dim ${visible ? 'w-[320px]' : 'w-[180px]'}`">
     <div
-      :class="`flex items-center justify-between h-10 rounded-2xl bg-gray-100 px-4 text-gray-700 cursor-pointer w-auto ${visible ? 'rounded-bl-none rounded-br-none' : ''}`"
+      :class="`flex items-center justify-between h-10 rounded-2xl bg-gold-50 px-4 text-abyss-600 cursor-pointer w-auto transition-all ${visible ? 'rounded-bl-none rounded-br-none' : ''}`"
       @click="visible = !visible"
     >
       <!-- 左侧图标与标题 -->
       <div class="flex items-center gap-2">
-        <icon-list />
+        <icon-list class="text-gold-500" />
         {{ visible ? '隐藏' : '显示' }}运行流程
       </div>
       <!-- 右侧图标 -->
-      <div class="">
+      <div class="text-gold-500">
         <template v-if="props.loading">
           <icon-loading />
         </template>
@@ -52,39 +52,39 @@ const visible = ref(false)
         :key="agent_thought.id"
       >
         <template #expand-icon>
-          <icon-file v-if="agent_thought.event === QueueEvent.longTermMemoryRecall" />
-          <icon-language v-else-if="agent_thought.event === QueueEvent.agentThought" />
-          <icon-storage v-else-if="agent_thought.event === QueueEvent.datasetRetrieval" />
-          <icon-tool v-else-if="agent_thought.event === QueueEvent.agentAction" />
-          <icon-message v-else-if="agent_thought.event === QueueEvent.agentMessage" />
+          <icon-file v-if="agent_thought.event === QueueEvent.longTermMemoryRecall" class="text-gold-500" />
+          <icon-language v-else-if="agent_thought.event === QueueEvent.agentThought" class="text-gold-500" />
+          <icon-storage v-else-if="agent_thought.event === QueueEvent.datasetRetrieval" class="text-gold-500" />
+          <icon-tool v-else-if="agent_thought.event === QueueEvent.agentAction" class="text-gold-500" />
+          <icon-message v-else-if="agent_thought.event === QueueEvent.agentMessage" class="text-gold-500" />
         </template>
         <template #header>
-          <div class="text-gray-700" v-if="agent_thought.event === QueueEvent.longTermMemoryRecall">
+          <div class="text-abyss-600" v-if="agent_thought.event === QueueEvent.longTermMemoryRecall">
             长期记忆召回
           </div>
-          <div class="text-gray-700" v-if="agent_thought.event === QueueEvent.agentThought">
+          <div class="text-abyss-600" v-if="agent_thought.event === QueueEvent.agentThought">
             智能体推理
           </div>
-          <div class="text-gray-700" v-if="agent_thought.event === QueueEvent.datasetRetrieval">
+          <div class="text-abyss-600" v-if="agent_thought.event === QueueEvent.datasetRetrieval">
             搜索知识库
           </div>
-          <div class="text-gray-700" v-if="agent_thought.event === QueueEvent.agentAction">
+          <div class="text-abyss-600" v-if="agent_thought.event === QueueEvent.agentAction">
             调用工具
           </div>
-          <div class="text-gray-700" v-if="agent_thought.event === QueueEvent.agentMessage">
+          <div class="text-abyss-600" v-if="agent_thought.event === QueueEvent.agentMessage">
             智能体消息
           </div>
         </template>
         <template #extra>
-          <div class="text-gray-500">{{ agent_thought.latency.toFixed(2) }}s</div>
+          <div class="text-gold-600 text-xs">{{ agent_thought.latency.toFixed(2) }}s</div>
         </template>
         <div
           v-if="['agent_thought', 'agent_message'].includes(agent_thought.event)"
-          class="text-xs text-gray-500 line-clamp-4 break-all"
+          class="text-xs text-abyss-400 line-clamp-4 break-all"
         >
           {{ agent_thought.thought || '-' }}
         </div>
-        <div v-else class="text-xs text-gray-500 line-clamp-4 break-all">
+        <div v-else class="text-xs text-abyss-400 line-clamp-4 break-all">
           {{ agent_thought.observation || '-' }}
         </div>
       </a-collapse-item>

@@ -4,6 +4,144 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Arco Design 主题变量覆盖 ===== */
+:root {
+  /* 主色 → 鎏金 */
+  --color-primary-1: #fdf9ef;
+  --color-primary-2: #f9f0d5;
+  --color-primary-3: #f0dda6;
+  --color-primary-4: #e6c76e;
+  --color-primary-5: #D4AF37;
+  --color-primary-6: #c49b2a;
+  --color-primary-7: #a67d1f;
+
+  /* 成功色 */
+  --color-success-6: #50c878;
+
+  /* 危险色 */
+  --color-danger-6: #cf6679;
+
+  /* 警告色 */
+  --color-warning-6: #D4AF37;
+
+  /* 全局背景和文字 */
+  --color-bg-1: #F8F5F0;
+  --color-bg-2: #FAF8F5;
+  --color-bg-3: #f0ebe2;
+  --color-bg-4: #e4dccf;
+  --color-bg-5: #d1c7b5;
+
+  --color-text-1: #0F172A;
+  --color-text-2: #2a3a5c;
+  --color-text-3: #505f83;
+  --color-text-4: #7c87a2;
+
+  --color-fill-1: rgba(212,175,55,0.04);
+  --color-fill-2: rgba(212,175,55,0.08);
+  --color-fill-3: rgba(212,175,55,0.12);
+  --color-fill-4: rgba(212,175,55,0.16);
+
+  --color-border-1: rgba(212,175,55,0.12);
+  --color-border-2: rgba(212,175,55,0.2);
+  --color-border-3: rgba(212,175,55,0.3);
+
+  /* 圆角 */
+  --border-radius-small: 6px;
+  --border-radius-medium: 10px;
+  --border-radius-large: 14px;
+}
+
+/* ===== Arco 按钮主色覆盖 ===== */
+.arco-btn-primary {
+  background: linear-gradient(135deg, #D4AF37 0%, #c49b2a 100%) !important;
+  border: 1px solid rgba(212,175,55,0.6) !important;
+  color: #0F172A !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(212,175,55,0.25);
+  transition: all 0.3s ease;
+}
+.arco-btn-primary:hover {
+  background: linear-gradient(135deg, #e6c76e 0%, #D4AF37 100%) !important;
+  box-shadow: 0 4px 16px rgba(212,175,55,0.35);
+  transform: translateY(-1px);
+}
+.arco-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(212,175,55,0.2);
+}
+
+/* ===== Arco 输入框覆盖 ===== */
+.arco-input-wrapper {
+  background: rgba(15,23,42,0.03) !important;
+  border: 1px solid rgba(212,175,55,0.15) !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease;
+}
+.arco-input-wrapper:hover {
+  border-color: rgba(212,175,55,0.35) !important;
+}
+.arco-input-wrapper.arco-input-focus {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.12) !important;
+}
+
+/* ===== Arco 复选框覆盖 ===== */
+.arco-checkbox-checked .arco-checkbox-icon {
+  background: #D4AF37 !important;
+  border-color: #D4AF37 !important;
+}
+
+/* ===== Arco 分割线覆盖 ===== */
+.arco-divider-text {
+  color: #7c87a2;
+}
+.arco-divider-horizontal::before,
+.arco-divider-horizontal::after {
+  border-color: rgba(212,175,55,0.15) !important;
+}
+
+/* ===== Arco 链接覆盖 ===== */
+.arco-link {
+  color: #D4AF37 !important;
+}
+.arco-link:hover {
+  color: #e6c76e !important;
+}
+
+/* ===== Arco 模态框覆盖 ===== */
+.arco-modal {
+  border: 1px solid rgba(212,175,55,0.15);
+  box-shadow: 0 16px 48px rgba(15,23,42,0.2), 0 0 0 1px rgba(212,175,55,0.08);
+}
+
+/* ===== Arco 下拉菜单覆盖 ===== */
+.arco-dropdown {
+  background: rgba(248,245,240,0.92) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(212,175,55,0.15) !important;
+  box-shadow: 0 8px 32px rgba(15,23,42,0.12);
+}
+.arco-dropdown-option:hover {
+  background: rgba(212,175,55,0.08) !important;
+}
+
+/* ===== 自定义滚动条 ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212,175,55,0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212,175,55,0.4);
+}
+
 @layer base {
   .scrollbar-w-none {
     scrollbar-width: none;
@@ -16,5 +154,141 @@
   html,
   body {
     @apply min-h-[600px] min-w-[1200px] h-full w-full;
+  }
+}
+
+@layer components {
+  /* ===== 磨砂玻璃效果 ===== */
+  .glass {
+    background: rgba(248,245,240,0.72);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(212,175,55,0.12);
+  }
+
+  .glass-dark {
+    background: rgba(15,23,42,0.82);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(212,175,55,0.15);
+  }
+
+  /* ===== 金属镶边 ===== */
+  .metal-border {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+  .metal-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(212,175,55,0.4) 0%,
+      rgba(212,175,55,0.1) 40%,
+      rgba(212,175,55,0.05) 60%,
+      rgba(212,175,55,0.3) 100%
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+  }
+
+  /* ===== 亚麻纹理背景 ===== */
+  .linen-bg {
+    background-color: #F8F5F0;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(212,175,55,0.015) 3px,
+        rgba(212,175,55,0.015) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 3px,
+        rgba(212,175,55,0.015) 3px,
+        rgba(212,175,55,0.015) 4px
+      );
+  }
+
+  /* ===== 金色文字效果 ===== */
+  .text-gold-shine {
+    background: linear-gradient(135deg, #D4AF37 0%, #f0dda6 50%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ===== 金色分割线 ===== */
+  .divider-gold {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212,175,55,0.3) 20%,
+      rgba(212,175,55,0.3) 80%,
+      transparent 100%
+    );
+  }
+
+  /* ===== 微光动效 ===== */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212,175,55,0.06) 50%,
+      transparent 100%
+    );
+    animation: shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  /* ===== 导航选中态金色竖条 ===== */
+  .nav-active {
+    position: relative;
+    background: rgba(212,175,55,0.08);
+    color: #D4AF37;
+  }
+  .nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(180deg, #D4AF37, #e6c76e);
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ===== 卡片悬浮效果 ===== */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15,23,42,0.08), 0 0 0 1px rgba(212,175,55,0.12);
   }
 }

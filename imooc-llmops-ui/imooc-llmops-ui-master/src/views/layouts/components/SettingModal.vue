@@ -62,11 +62,26 @@ watch(
 </script>
 
 <template>
-  <a-modal :visible="visible" hide-title :footer="false" :width="1000" @cancel="handleCancel">
+  <a-modal
+    :visible="visible"
+    hide-title
+    :footer="false"
+    :width="1000"
+    @cancel="handleCancel"
+    class="setting-modal"
+    :modal-style="{
+      background: 'rgba(248,245,240,0.95)',
+      backdropFilter: 'blur(24px) saturate(180%)',
+      border: '1px solid rgba(212,175,55,0.15)',
+      borderRadius: '16px',
+      boxShadow: '0 24px 64px rgba(15,23,42,0.15), 0 0 0 1px rgba(212,175,55,0.08)',
+      overflow: 'hidden',
+    }"
+  >
     <!-- 关闭按钮 -->
     <a-button
       type="text"
-      class="!text-gray-700 absolute right-5 top-5"
+      class="!text-abyss-400 hover:!text-gold-400 absolute right-5 top-5 z-10"
       size="small"
       @click="handleCancel"
     >
@@ -77,13 +92,13 @@ watch(
     <!-- 内容容器 -->
     <div class="flex min-h-[500px]">
       <!-- 左侧导航 -->
-      <div class="w-[200px] border-r pr-5">
+      <div class="w-[200px] border-r border-gold-dim pr-5">
         <!-- 导航版标题 -->
-        <div class="text-xl font-bold text-gray-900 mb-5">设置</div>
+        <div class="text-xl font-bold text-gold-shine mb-5">设置</div>
         <!-- 导航列表 -->
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-1">
           <div
-            class="cursor-pointer bg-gray-100 hover:bg-gray-200 rounded-lg h-8 leading-8 text-gray-700 hover:text-gray-900 px-4"
+            class="nav-active cursor-pointer rounded-lg h-9 leading-9 text-gold-600 px-4 text-sm font-medium"
           >
             账号设置
           </div>
@@ -92,14 +107,15 @@ watch(
       <!-- 右侧内容 -->
       <div class="flex-1 px-8">
         <!-- 右侧标题 -->
-        <div class="text-xl font-bold text-gray-700 mb-5">账号设置</div>
+        <div class="text-xl font-bold text-abyss-800 mb-2">账号设置</div>
+        <div class="divider-gold mb-5"></div>
         <!-- 账号表单 -->
-        <a-form :model="{}" layout="vertical">
+        <a-form :model="{}" layout="vertical" class="setting-form">
           <a-form-item field="avatar">
             <template #label>
               <div class="flex items-center gap-1">
-                账号头像
-                <div class="text-red-700">*</div>
+                <span class="text-abyss-700">账号头像</span>
+                <span class="text-gold-400">*</span>
               </div>
             </template>
             <a-upload
@@ -133,8 +149,8 @@ watch(
           <a-form-item field="name">
             <template #label>
               <div class="flex items-center gap-1">
-                账号昵称
-                <div class="text-red-700">*</div>
+                <span class="text-abyss-700">账号昵称</span>
+                <span class="text-gold-400">*</span>
               </div>
             </template>
             <div v-if="updateName" class="flex items-center gap-2 w-full">
@@ -147,7 +163,7 @@ watch(
               <!-- 取消&保存 -->
               <div class="flex items-center gap-1">
                 <a-button
-                  class="rounded-lg"
+                  class="rounded-lg !border-gold-dim !text-abyss-500 hover:!border-gold-bright hover:!text-abyss-800"
                   @click="
                     () => {
                       updateName = false
@@ -176,8 +192,8 @@ watch(
               </div>
             </div>
             <div v-else class="flex items-center gap-1">
-              <div class="">{{ accountStore.account.name }}</div>
-              <a-button size="mini" type="text" class="!text-gray-700" @click="updateName = true">
+              <div class="text-abyss-700">{{ accountStore.account.name }}</div>
+              <a-button size="mini" type="text" class="!text-gold-400 hover:!text-gold-600" @click="updateName = true">
                 <template #icon>
                   <icon-edit />
                 </template>
@@ -187,8 +203,8 @@ watch(
           <a-form-item field="password">
             <template #label>
               <div class="flex items-center gap-1">
-                账号密码
-                <div class="text-red-700">*</div>
+                <span class="text-abyss-700">账号密码</span>
+                <span class="text-gold-400">*</span>
               </div>
             </template>
             <div v-if="updatePassword" class="flex items-center gap-2 w-full">
@@ -197,7 +213,7 @@ watch(
               <!-- 取消&保存 -->
               <div class="flex items-center gap-1">
                 <a-button
-                  class="rounded-lg"
+                  class="rounded-lg !border-gold-dim !text-abyss-500 hover:!border-gold-bright hover:!text-abyss-800"
                   @click="
                     () => {
                       updatePassword = false
@@ -226,11 +242,11 @@ watch(
               </div>
             </div>
             <div v-else class="flex items-center gap-1">
-              <div class="">******</div>
+              <div class="text-abyss-700">******</div>
               <a-button
                 size="mini"
                 type="text"
-                class="!text-gray-700"
+                class="!text-gold-400 hover:!text-gold-600"
                 @click="updatePassword = true"
               >
                 <template #icon>
@@ -239,7 +255,10 @@ watch(
               </a-button>
             </div>
           </a-form-item>
-          <a-form-item field="email" label="绑定邮箱">
+          <a-form-item field="email">
+            <template #label>
+              <span class="text-abyss-700">绑定邮箱</span>
+            </template>
             <a-input readonly v-model="accountForm.email" />
           </a-form-item>
         </a-form>
@@ -248,4 +267,33 @@ watch(
   </a-modal>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* 上传组件主题适配 */
+.setting-form :deep(.arco-upload-list-picture) {
+  border: 2px solid rgba(212,175,55,0.2) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+.setting-form :deep(.arco-upload-picture-card) {
+  border: 2px dashed rgba(212,175,55,0.2) !important;
+  border-radius: 12px !important;
+  background: rgba(212,175,55,0.03) !important;
+  transition: all 0.3s ease;
+}
+.setting-form :deep(.arco-upload-picture-card:hover) {
+  border-color: rgba(212,175,55,0.4) !important;
+  background: rgba(212,175,55,0.06) !important;
+}
+.setting-form :deep(.arco-upload-picture-card .arco-icon) {
+  color: #D4AF37;
+}
+/* 表单标签 */
+.setting-form :deep(.arco-form-item-label) {
+  color: #2a3a5c;
+}
+/* 只读输入框 */
+.setting-form :deep(.arco-input[readonly]) {
+  color: #505f83;
+  cursor: default;
+}
+</style>

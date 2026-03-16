@@ -13,7 +13,7 @@ from uuid import UUID
 from injector import inject
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_community.chat_models.tongyi import ChatTongyi
 
 from internal.entity.ai_entity import OPTIMIZE_PROMPT_TEMPLATE
 from internal.exception import ForbiddenException
@@ -53,7 +53,7 @@ class AIService(BaseService):
         ])
 
         # 2.构建LLM
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
+        llm = ChatTongyi(model="qwen-plus", temperature=0.5)
 
         # 3.组装优化链
         optimize_chain = prompt_template | llm | StrOutputParser()

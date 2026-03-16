@@ -24,7 +24,7 @@ const props = defineProps({
     required: true,
   },
   suggested_questions: { type: Array as PropType<string[]>, default: () => [], required: false },
-  message_class: { type: String, default: '!bg-gray-100', required: false },
+  message_class: { type: String, default: '!bg-parchment-200', required: false },
 })
 const emits = defineEmits(['selectSuggestedQuestion'])
 const md = MarkdownIt()
@@ -40,28 +40,28 @@ const compiledMarkdown = computed(() => {
       v-if="props.app?.icon"
       :size="30"
       shape="circle"
-      class="flex-shrink-0"
+      class="flex-shrink-0 shadow-gold-sm"
       :image-url="props.app?.icon"
     />
-    <a-avatar v-else :size="30" shape="circle" class="flex-shrink-0 bg-blue-700">
+    <a-avatar v-else :size="30" shape="circle" class="flex-shrink-0 !bg-abyss-800 !text-gold-400">
       <icon-apps />
     </a-avatar>
     <!-- 右侧名称与消息 -->
     <div class="flex-1 flex flex-col items-start gap-2">
       <!-- 应用名称 -->
-      <div class="text-gray-700 font-bold">{{ props.app?.name }}</div>
+      <div class="text-abyss-700 font-bold">{{ props.app?.name }}</div>
       <!-- 推理步骤 -->
       <agent-thought :agent_thoughts="props.agent_thoughts" :loading="props.loading" />
       <!-- AI消息 -->
       <div
         v-if="props.loading && props.answer.trim() === ''"
-        :class="`${props.message_class} border border-gray-200 text-gray-700 px-4 py-3 rounded-2xl break-all`"
+        :class="`${props.message_class} border border-gold-dim text-abyss-700 px-4 py-3 rounded-2xl break-all`"
       >
         <dot-flashing />
       </div>
       <div
         v-else
-        :class="`${props.message_class} markdown-body border border-gray-200 text-gray-700 px-4 py-3 rounded-2xl break-all`"
+        :class="`${props.message_class} markdown-body border border-gold-dim text-abyss-700 px-4 py-3 rounded-2xl break-all`"
         v-html="compiledMarkdown"
       ></div>
       <!-- 消息展示与操作 -->
@@ -71,11 +71,11 @@ const compiledMarkdown = computed(() => {
           <template #split>
             <a-divider direction="vertical" class="m-0" />
           </template>
-          <div class="flex items-center gap-1 text-gray-500">
+          <div class="flex items-center gap-1 text-abyss-400">
             <icon-check />
             {{ props.latency.toFixed(2) }}s
           </div>
-          <div class="text-gray-500">{{ props.total_token_count }} Tokens</div>
+          <div class="text-abyss-400">{{ props.total_token_count }} Tokens</div>
         </a-space>
         <!-- 操作 -->
       </div>
@@ -84,7 +84,7 @@ const compiledMarkdown = computed(() => {
         <div
           v-for="(suggested_question, idx) in props.suggested_questions"
           :key="idx"
-          class="px-4 py-1.5 border rounded-lg text-gray-700 cursor-pointer bg-white hover:bg-gray-50"
+          class="px-4 py-1.5 border border-gold-dim rounded-lg text-abyss-600 cursor-pointer bg-parchment-100 hover:bg-gold-50 hover:border-gold-bright transition-all"
           @click="() => emits('selectSuggestedQuestion', suggested_question)"
         >
           {{ suggested_question }}

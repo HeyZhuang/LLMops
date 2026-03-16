@@ -19,13 +19,13 @@ onMounted(async () => await loadApp(String(route.params?.app_id)))
   <div class="min-h-screen flex flex-col h-full overflow-hidden">
     <!-- 顶部导航 -->
     <div
-      class="h-[77px] flex-shrink-0 bg-gray-50 p-4 flex items-center justify-between relative border-b"
+      class="h-[77px] flex-shrink-0 linen-bg p-4 flex items-center justify-between relative border-b border-gold-dim"
     >
       <!-- 左侧应用信息 -->
       <div class="flex items-center gap-2">
         <!-- 回退按钮 -->
         <router-link :to="{ name: 'space-apps-list' }">
-          <a-button size="mini">
+          <a-button size="mini" class="!border-gold-dim !text-abyss-500 hover:!text-gold-500 hover:!border-gold-bright">
             <template #icon>
               <icon-left />
             </template>
@@ -34,26 +34,26 @@ onMounted(async () => await loadApp(String(route.params?.app_id)))
         <!-- 应用容器 -->
         <div class="flex items-center gap-3">
           <!-- 应用图标 -->
-          <a-avatar :size="40" shape="square" class="rounded-lg" :image-url="app.icon" />
+          <a-avatar :size="40" shape="square" class="rounded-lg shadow-gold-sm" :image-url="app.icon" />
           <!-- 应用信息 -->
           <div class="flex flex-col justify-between h-[40px]">
             <a-skeleton-line v-if="loading" :widths="[100]" />
-            <div v-else class="text-gray-700 font-bold">{{ app.name }}</div>
+            <div v-else class="text-abyss-800 font-bold">{{ app.name }}</div>
             <div v-if="loading" class="flex items-center gap-2">
               <a-skeleton-line :widths="[60]" :line-height="18" />
               <a-skeleton-line :widths="[60]" :line-height="18" />
               <a-skeleton-line :widths="[60]" :line-height="18" />
             </div>
             <div v-else class="flex items-center gap-2">
-              <div class="flex items-center h-[18px] text-xs text-gray-500">
+              <div class="flex items-center h-[18px] text-xs text-abyss-400">
                 <icon-user />
                 个人空间
               </div>
-              <div class="flex items-center h-[18px] text-xs text-gray-500">
+              <div class="flex items-center h-[18px] text-xs text-abyss-400">
                 <icon-schedule />
                 {{ app.status === 'draft' ? '草稿' : '已发布' }}
               </div>
-              <a-tag size="small" class="rounded h-[18px] leading-[18px] bg-gray-200 text-gray-500">
+              <a-tag size="small" class="rounded h-[18px] leading-[18px] !bg-gold-50 !text-gold-700 !border-gold-dim">
                 已自动保存 {{ moment(app.draft_updated_at * 1000).format('HH:mm:ss') }}
               </a-tag>
             </div>
@@ -65,22 +65,22 @@ onMounted(async () => await loadApp(String(route.params?.app_id)))
         <a-space :size="12">
           <router-link
             :to="{ name: 'space-apps-detail', params: { app_id: String(route.params?.app_id) } }"
-            class="text-base font-bold text-gray-500"
-            active-class="!text-blue-700"
+            class="text-base font-bold text-abyss-400 hover:text-gold-500 transition-colors"
+            active-class="!text-gold-600"
           >
             编排
           </router-link>
           <router-link
             :to="{ name: 'space-apps-published', params: { app_id: String(route.params?.app_id) } }"
-            class="text-base font-bold text-gray-500"
-            active-class="!text-blue-700"
+            class="text-base font-bold text-abyss-400 hover:text-gold-500 transition-colors"
+            active-class="!text-gold-600"
           >
             发布配置
           </router-link>
           <router-link
             :to="{ name: 'space-apps-analysis', params: { app_id: String(route.params?.app_id) } }"
-            class="text-base font-bold text-gray-500"
-            active-class="!text-blue-700"
+            class="text-base font-bold text-abyss-400 hover:text-gold-500 transition-colors"
+            active-class="!text-gold-600"
           >
             统计分析
           </router-link>
@@ -91,7 +91,7 @@ onMounted(async () => await loadApp(String(route.params?.app_id)))
         <a-space :size="12">
           <a-button
             :disabled="loading"
-            class="rounded-lg"
+            class="rounded-lg !border-gold-dim !text-abyss-500 hover:!border-gold-bright"
             @click="publishHistoryDrawerVisible = true"
           >
             <template #icon>
@@ -127,7 +127,7 @@ onMounted(async () => await loadApp(String(route.params?.app_id)))
               <template #content>
                 <a-doption
                   :disabled="app.status === 'draft'"
-                  class="!text-red-700"
+                  class="!text-red-400"
                   @click="
                     async () => {
                       const app_id = String(route.params?.app_id)

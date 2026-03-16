@@ -15,7 +15,6 @@ from flask import Flask
 from injector import inject
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langchain_community.chat_models.tongyi import ChatTongyi
 from sqlalchemy import desc
 
@@ -48,7 +47,7 @@ class ConversationService(BaseService):
         prompt = ChatPromptTemplate.from_template(SUMMARIZER_TEMPLATE)
 
         # 2.构建大语言模型实例，并且将大语言模型的温度调低，降低幻觉的概率
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
+        llm = ChatTongyi(model="qwen-plus", temperature=0.5)
 
         # 3.构建链应用
         summary_chain = prompt | llm | StrOutputParser()
@@ -71,7 +70,7 @@ class ConversationService(BaseService):
         ])
 
         # 2.构建大语言模型实例，并且将大语言模型的温度调低，降低幻觉的概率
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        llm = ChatTongyi(model="qwen-plus", temperature=0)
         structured_llm = llm.with_structured_output(ConversationInfo)
 
         # 3.构建链应用
@@ -114,15 +113,15 @@ class ConversationService(BaseService):
         chain = prompt | structured_llm
 
         # 4.调用链并获取建议问题列表
-        suggested_questions = chain.invoke({"histories": histories})
-
-        # 5.提取建议问题列表
         questions = []
         try:
+            suggested_questions = chain.invoke({"histories": histories})
             if suggested_questions and hasattr(suggested_questions, "questions"):
                 questions = suggested_questions.questions
         except Exception as e:
-            logging.exception(f"生成建议问题出错, suggested_questions: {suggested_questions}, 错误信息: {str(e)}")
+            logging.exception(f"生成建议问题出错, 错误信息: {str(e)}")
+
+        # 5.提取建议问题列表
         if len(questions) > 3:
             questions = questions[:3]
 

@@ -55,10 +55,7 @@ onMounted(async () => {
 watch(
   () => props.create_api_key,
   (value) => {
-    // 3.1 清空updateApiKeyId
     updateApiKeyId.value = ''
-
-    // 3.2 显示or隐藏模态窗
     createOrUpdateApiKeyModalVisible.value = Boolean(value)
   },
 )
@@ -89,6 +86,7 @@ watch(
       :loading="getApiKeysWithPageLoading"
       :bordered="{ wrapper: false }"
       :data="api_keys"
+      class="api-keys-table"
       @page-change="
         (page: number) => {
           router.push({
@@ -103,15 +101,15 @@ watch(
           title="秘钥"
           data-index="api_key"
           :width="400"
-          header-cell-class="rounded-tl-lg !bg-gray-200 text-gray-700"
-          cell-class="bg-transparent text-gray-700"
+          header-cell-class="rounded-tl-lg !bg-abyss-800 !text-gold-400"
+          cell-class="!bg-parchment-200/60 text-abyss-700"
         >
           <template #cell="{ record }">
             <div class="flex items-center">
-              <div class="line-clamp-1">{{ record.api_key }}</div>
+              <div class="line-clamp-1 font-mono text-sm">{{ record.api_key }}</div>
               <a-button
                 size="mini"
-                class="flex-shrink-0 rounded"
+                class="flex-shrink-0 rounded !text-gold-500 hover:!text-gold-600"
                 @click="async () => copyToClipboard(record.api_key)"
               >
                 <template #icon>
@@ -124,26 +122,26 @@ watch(
         <a-table-column
           title="状态"
           data-index="is_active"
-          header-cell-class="!bg-gray-200 text-gray-700"
-          cell-class="bg-transparent text-gray-700"
+          header-cell-class="!bg-abyss-800 !text-gold-400"
+          cell-class="!bg-parchment-200/60 text-abyss-700"
         >
           <template #cell="{ record }">
             <a-space>
               <div
                 v-if="record.is_active"
-                class="w-2 h-2 bg-green-500 rounded-sm border border-green-700"
+                class="w-2 h-2 bg-gold-400 rounded-full shadow-gold-sm"
               ></div>
-              <div v-else class="w-2 h-2 bg-gray-500 rounded-sm border border-gray-700"></div>
-              <div v-if="record.is_active" class="text-gray-700">可用</div>
-              <div v-else class="text-gray-700">已禁用</div>
+              <div v-else class="w-2 h-2 bg-abyss-300 rounded-full"></div>
+              <div v-if="record.is_active" class="text-gold-600">可用</div>
+              <div v-else class="text-abyss-400">已禁用</div>
             </a-space>
           </template>
         </a-table-column>
         <a-table-column
           title="创建时间"
           data-index="created_at"
-          header-cell-class="!bg-gray-200 text-gray-700"
-          cell-class="bg-transparent text-gray-700"
+          header-cell-class="!bg-abyss-800 !text-gold-400"
+          cell-class="!bg-parchment-200/60 text-abyss-500"
         >
           <template #cell="{ record }">
             {{ moment(record.created_at * 1000).format('YYYY-MM-DD hh:mm:ss') }}
@@ -153,8 +151,8 @@ watch(
           title="备注"
           :width="400"
           data-index="remark"
-          header-cell-class="!bg-gray-200 text-gray-700"
-          cell-class="bg-transparent text-gray-700"
+          header-cell-class="!bg-abyss-800 !text-gold-400"
+          cell-class="!bg-parchment-200/60 text-abyss-500"
         >
           <template #cell="{ record }">
             <div class="line-clamp-1">{{ record.remark }}</div>
@@ -163,8 +161,8 @@ watch(
         <a-table-column
           title="操作"
           data-index="operator"
-          header-cell-class="rounded-tr-lg !bg-gray-200 text-gray-700"
-          cell-class="bg-transparent text-gray-700 !h-[40px]"
+          header-cell-class="rounded-tr-lg !bg-abyss-800 !text-gold-400"
+          cell-class="!bg-parchment-200/60 text-abyss-700 !h-[40px]"
           :width="100"
         >
           <template #cell="{ record, rowIndex }">
@@ -179,14 +177,13 @@ watch(
                 @change="
                   (value) => {
                     handleUpdateApiKeyIsActive(record.id, value as boolean, () => {
-                      // 更新对应记录的状态文字描述
                       api_keys[rowIndex].is_active = Boolean(value)
                     })
                   }
                 "
               />
               <a-dropdown position="br">
-                <a-button type="text" size="mini" class="!text-gray-700">
+                <a-button type="text" size="mini" class="!text-abyss-400 hover:!text-gold-400">
                   <template #icon>
                     <icon-more />
                   </template>
@@ -195,12 +192,9 @@ watch(
                   <a-doption
                     @click="
                       () => {
-                        // 1.赋值更新数据
                         updateApiKeyId = record.id
                         updateApiKeyIsActive = record.is_active
                         updateApiKeyRemark = record.remark
-
-                        // 2.显示模态窗
                         createOrUpdateApiKeyModalVisible = true
                       }
                     "
@@ -208,7 +202,7 @@ watch(
                     重命名
                   </a-doption>
                   <a-doption
-                    class="!text-red-700"
+                    class="!text-red-400"
                     @click="
                       () =>
                         handleDeleteApiKey(record.id, async () => {
@@ -237,4 +231,17 @@ watch(
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.api-keys-table :deep(.arco-table-th) {
+  border-bottom: 2px solid rgba(212,175,55,0.2);
+}
+.api-keys-table :deep(.arco-table-td) {
+  border-bottom: 1px solid rgba(212,175,55,0.08);
+}
+.api-keys-table :deep(.arco-table-tr:hover .arco-table-td) {
+  background: rgba(212,175,55,0.04) !important;
+}
+.api-keys-table :deep(.arco-switch-checked) {
+  background: #D4AF37 !important;
+}
+</style>

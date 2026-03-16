@@ -16,11 +16,14 @@ const route = useRoute()
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-1">
     <router-link
       to="/home"
-      class="flex items-center gap-2 h-8 leading-8 rounded-lg transition-all px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-      active-class="bg-gray-100"
+      :class="[
+        'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',
+        'hover:text-gold-400 hover:bg-gold-50',
+        route.path.startsWith('/home') ? 'nav-active !text-gold-600 font-medium' : ''
+      ]"
     >
       <icon-home-full v-if="route.path.startsWith('/home')" />
       <icon-home v-else />
@@ -28,17 +31,25 @@ const route = useRoute()
     </router-link>
     <router-link
       to="/space/apps"
-      :class="`flex items-center gap-2 h-8 leading-8 rounded-lg transition-all px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200 ${route.path.startsWith('/space') ? 'bg-gray-100' : ''}`"
+      :class="[
+        'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',
+        'hover:text-gold-400 hover:bg-gold-50',
+        route.path.startsWith('/space') ? 'nav-active !text-gold-600 font-medium' : ''
+      ]"
     >
       <icon-space-full v-if="route.path.startsWith('/space')" />
       <icon-space v-else />
       个人空间
     </router-link>
-    <div class="text-gray-500 text-sm px-2">探索</div>
+    <!-- 分区标题 -->
+    <div class="text-abyss-300 text-xs px-3 mt-2 mb-1 uppercase tracking-wider">探索</div>
     <router-link
       to="/store/apps"
-      class="flex items-center gap-2 h-8 leading-8 rounded-lg transition-all px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-      active-class="bg-gray-100"
+      :class="[
+        'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',
+        'hover:text-gold-400 hover:bg-gold-50',
+        route.path.startsWith('/store/apps') ? 'nav-active !text-gold-600 font-medium' : ''
+      ]"
     >
       <icon-app-full v-if="route.path.startsWith('/store/apps')" />
       <icon-app v-else />
@@ -46,8 +57,11 @@ const route = useRoute()
     </router-link>
     <router-link
       to="/store/tools"
-      class="flex items-center gap-2 h-8 leading-8 rounded-lg transition-all px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-      active-class="bg-gray-100"
+      :class="[
+        'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',
+        'hover:text-gold-400 hover:bg-gold-50',
+        route.path.startsWith('/store/tools') ? 'nav-active !text-gold-600 font-medium' : ''
+      ]"
     >
       <icon-tool-full v-if="route.path.startsWith('/store/tools')" />
       <icon-tool v-else />
@@ -55,8 +69,11 @@ const route = useRoute()
     </router-link>
     <router-link
       to="/openapi"
-      class="flex items-center gap-2 h-8 leading-8 rounded-lg transition-all px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-      active-class="bg-gray-100"
+      :class="[
+        'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',
+        'hover:text-gold-400 hover:bg-gold-50',
+        route.path.startsWith('/openapi') ? 'nav-active !text-gold-600 font-medium' : ''
+      ]"
     >
       <icon-open-api-full v-if="route.path.startsWith('/openapi')" />
       <icon-open-api v-else />

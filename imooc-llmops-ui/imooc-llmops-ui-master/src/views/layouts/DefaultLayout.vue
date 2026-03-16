@@ -37,20 +37,25 @@ onMounted(async () => {
 </script>
 
 <template>
-  <a-layout has-sider class="h-full">
+  <a-layout has-sider class="h-full linen-bg">
     <!-- 侧边栏 -->
-    <a-layout-sider :width="240" class="min-h-screen bg-gray-50 p-2 shadow-none">
-      <div class="bg-white h-full rounded-lg px-2 py-4 flex flex-col justify-between">
+    <a-layout-sider :width="240" class="min-h-screen p-2 !bg-transparent">
+      <div class="glass metal-border shimmer h-full rounded-xl px-3 py-4 flex flex-col justify-between shadow-glass">
         <!-- 上半部分 -->
-        <div class="">
+        <div>
           <!-- 顶部Logo -->
-          <router-link
-            to="/home"
-            class="block h-9 w-[110px] mb-5 bg-gray-200 hover:bg-gray-300 transition-all rounded-lg"
-          />
+          <router-link to="/home" class="block mb-4">
+            <img
+              src="@/assets/images/logo.png"
+              alt="LLMOps"
+              class="h-9 w-[110px] object-contain"
+            />
+          </router-link>
+          <!-- 金色分割线 -->
+          <div class="divider-gold mb-4"></div>
           <!-- 创建AI应用按钮 -->
           <router-link :to="{ name: 'space-apps-list', query: { create_type: 'app' } }">
-            <a-button type="primary" long class="rounded-lg mb-4">
+            <a-button type="primary" long class="rounded-lg mb-4 !h-9">
               <template #icon>
                 <icon-plus />
               </template>
@@ -61,43 +66,47 @@ onMounted(async () => {
           <layout-sidebar />
         </div>
         <!-- 账号设置 -->
-        <a-dropdown position="tl">
-          <div
-            class="flex items-center p-2 gap-2 transition-all cursor-pointer rounded-lg hover:bg-gray-100"
-          >
-            <!-- 头像 -->
-            <a-avatar
-              :size="32"
-              class="text-sm bg-blue-700"
-              :image-url="accountStore.account.avatar"
+        <div>
+          <!-- 金色分割线 -->
+          <div class="divider-gold mb-3"></div>
+          <a-dropdown position="tl">
+            <div
+              class="flex items-center p-2 gap-2 transition-all cursor-pointer rounded-lg hover:bg-gold-50"
             >
-              {{ accountStore.account.name[0] }}
-            </a-avatar>
-            <!-- 个人信息 -->
-            <div class="flex flex-col">
-              <div class="text-sm text-gray-900">{{ accountStore.account.name }}</div>
-              <div class="text-xs text-gray-500">{{ accountStore.account.email }}</div>
+              <!-- 头像 -->
+              <a-avatar
+                :size="32"
+                class="text-sm !bg-abyss-800 !text-gold-400"
+                :image-url="accountStore.account.avatar"
+              >
+                {{ accountStore.account.name[0] }}
+              </a-avatar>
+              <!-- 个人信息 -->
+              <div class="flex flex-col">
+                <div class="text-sm text-abyss-800 font-medium">{{ accountStore.account.name }}</div>
+                <div class="text-xs text-abyss-400">{{ accountStore.account.email }}</div>
+              </div>
             </div>
-          </div>
-          <template #content>
-            <a-doption @click="settingModalVisible = true">
-              <template #icon>
-                <icon-settings />
-              </template>
-              账号设置
-            </a-doption>
-            <a-doption @click="handleLogout">
-              <template #icon>
-                <icon-poweroff />
-              </template>
-              退出登录
-            </a-doption>
-          </template>
-        </a-dropdown>
+            <template #content>
+              <a-doption @click="settingModalVisible = true">
+                <template #icon>
+                  <icon-settings />
+                </template>
+                账号设置
+              </a-doption>
+              <a-doption @click="handleLogout">
+                <template #icon>
+                  <icon-poweroff />
+                </template>
+                退出登录
+              </a-doption>
+            </template>
+          </a-dropdown>
+        </div>
       </div>
     </a-layout-sider>
     <!-- 右侧内容 -->
-    <a-layout-content>
+    <a-layout-content class="!bg-transparent">
       <router-view />
     </a-layout-content>
     <!-- 设置模态窗 -->
@@ -105,4 +114,8 @@ onMounted(async () => {
   </a-layout>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.arco-layout-sider) {
+  background: transparent !important;
+}
+</style>
