@@ -142,7 +142,9 @@ const handleSubmit = async () => {
         })
       }
       messages.value[0].agent_thoughts = agent_thoughts
-      scroller.value.scrollToBottom()
+      // 替换对象引用，触发 DynamicScroller 检测到 item 变化并重新渲染
+      messages.value[0] = { ...messages.value[0] }
+      nextTick(() => scroller.value?.scrollToBottom())
     }
   })
   await nextTick(() => {
