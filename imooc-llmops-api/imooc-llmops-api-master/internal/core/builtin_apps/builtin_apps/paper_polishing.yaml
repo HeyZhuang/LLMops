@@ -4,8 +4,8 @@ name: "论文润色助手"
 icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/153da84b-5a0c-4665-9745-9022eb846598.jpg"
 description: "专业的学术论文润色助手，帮助优化论文语言表达、修正语法错误、提升学术写作质量。"
 model_config:
-  provider: "openai"
-  model: "gpt-4o-mini"
+  provider: "tongyi"
+  model: "qwen-plus"
   parameters:
     temperature: 0.3
     top_p: 0.85

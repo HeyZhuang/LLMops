@@ -13,11 +13,9 @@ from typing import Any
 
 from flask import current_app
 from injector import inject
-from langchain_openai import ChatOpenAI
-
 from internal.core.language_model import LanguageModelManager
 from internal.core.language_model.entities.model_entity import BaseLanguageModel, ModelFeature
-from internal.core.language_model.providers.openai.chat import Chat
+from internal.core.language_model.providers.tongyi.chat import Chat
 from internal.exception import NotFoundException
 from internal.lib.helper import convert_model_to_dict
 from pkg.sqlalchemy import SQLAlchemy
@@ -140,14 +138,14 @@ class LanguageModelService(BaseService):
     def load_default_language_model(cls) -> BaseLanguageModel:
         """加载默认的大语言模型，在模型管理器中获取不到模型或者出错时使用默认模型进行兜底"""
         return Chat(
-            model="gpt-4o-mini",
+            model="qwen-plus",
             temperature=1,
             max_tokens=8192,
             features=[ModelFeature.TOOL_CALL, ModelFeature.AGENT_THOUGHT],
             metadata={
                 "pricing": {
-                    "input": 0.0011,
-                    "output": 0.0044,
+                    "input": 0.0200,
+                    "output": 0.0200,
                     "unit": 0.001,
                     "currency": "RMB"
                 }

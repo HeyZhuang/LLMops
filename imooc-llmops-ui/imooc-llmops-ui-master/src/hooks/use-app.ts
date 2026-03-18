@@ -341,6 +341,7 @@ export const useGetDraftAppConfig = () => {
         retrieval_config: data.retrieval_config,
         tools: data.tools,
         workflows: data.workflows,
+        multi_agent_config: data.multi_agent_config || { enable: false, sub_agents: [] },
       }
     } finally {
       loading.value = false

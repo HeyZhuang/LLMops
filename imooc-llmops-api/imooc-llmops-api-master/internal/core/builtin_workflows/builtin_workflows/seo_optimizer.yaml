@@ -1,0 +1,154 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000003"
+category: "content"
+name: "SEO内容优化"
+tool_call_name: "seo_optimizer"
+icon: ""
+description: "分析文本的SEO表现，并生成优化后的版本，提升搜索引擎排名效果"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "33333333-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收待优化的文本内容"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "content"
+          description: "待优化的文本内容"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "target_keywords"
+          description: "目标SEO关键词"
+          required: false
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+    - id: "33333333-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "SEO分析"
+      description: "分析当前文本的SEO表现"
+      position:
+        x: 300
+        y: 200
+      prompt: "你是一位SEO优化专家。请分析以下文本的SEO表现：\n\n文本内容：\n{{content}}\n\n目标关键词：{{target_keywords}}\n\n请从以下维度进行分析：\n1. 关键词密度和分布\n2. 标题和副标题结构\n3. 内容可读性\n4. Meta描述建议\n5. 内部链接建议\n6. 改进建议清单\n\n请以结构化格式输出分析报告。"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.5
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 4096
+      inputs:
+        - name: "content"
+          description: "待分析文本"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "33333333-1111-1111-1111-000000000001"
+              ref_var_name: "content"
+          meta: {}
+        - name: "target_keywords"
+          description: "目标关键词"
+          required: false
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "33333333-1111-1111-1111-000000000001"
+              ref_var_name: "target_keywords"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "33333333-1111-1111-1111-000000000003"
+      node_type: "llm"
+      title: "内容优化"
+      description: "根据分析结果优化文本内容"
+      position:
+        x: 600
+        y: 200
+      prompt: "你是一位SEO内容优化专家。请根据以下SEO分析报告，对原文进行优化。\n\n原文：\n{{content}}\n\nSEO分析报告：\n{{analysis}}\n\n优化要求：\n1. 自然融入目标关键词，避免过度堆砌\n2. 优化标题和副标题结构\n3. 提升内容可读性\n4. 添加合适的Meta描述\n5. 保持原文核心信息不变\n6. 使用Markdown格式输出"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.6
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 8192
+      inputs:
+        - name: "content"
+          description: "原文内容"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "33333333-1111-1111-1111-000000000001"
+              ref_var_name: "content"
+          meta: {}
+        - name: "analysis"
+          description: "SEO分析报告"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "33333333-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "33333333-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出优化后的文本"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "optimized_content"
+          description: "优化后的SEO文本"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "33333333-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-3333-1111-1111-000000000001"
+      source: "33333333-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "33333333-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-3333-1111-1111-000000000002"
+      source: "33333333-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "33333333-1111-1111-1111-000000000003"
+      target_type: "llm"
+    - id: "eeeeeeee-3333-1111-1111-000000000003"
+      source: "33333333-1111-1111-1111-000000000003"
+      source_type: "llm"
+      target: "33333333-1111-1111-1111-000000000004"
+      target_type: "end"

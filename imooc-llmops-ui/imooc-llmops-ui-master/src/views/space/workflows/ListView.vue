@@ -5,6 +5,10 @@ import { onMounted, ref, watch } from 'vue'
 import { useAccountStore } from '@/stores/account'
 import { useRoute } from 'vue-router'
 import CreateOrUpdateWorkflowModal from '@/views/space/workflows/components/CreateOrUpdateWorkflowModal.vue'
+import {
+  useAddBuiltinWorkflowToSpace,
+  useGetBuiltinWorkflows,
+} from '@/hooks/use-builtin-workflow'
 
 // 1.定义页面所需数据
 const route = useRoute()
@@ -22,6 +26,9 @@ const {
   loadWorkflows,
 } = useGetWorkflowsWithPage()
 const { handleDeleteWorkflow } = useDeleteWorkflow()
+const { workflows: builtinWorkflows, loadBuiltinWorkflows } = useGetBuiltinWorkflows()
+const { handleAddBuiltinWorkflowToSpace } = useAddBuiltinWorkflowToSpace()
+const recommendedWorkflows = ref<typeof builtinWorkflows.value>([])
 
 // 2.定义滚动数据分页处理器
 const handleScroll = async (event: UIEvent) => {
@@ -39,6 +46,9 @@ const handleScroll = async (event: UIEvent) => {
 onMounted(async () => {
   // 初始化工作流数据数据
   await loadWorkflows(String(route.query?.search_word ?? ''), '', true)
+  // 加载推荐模板
+  await loadBuiltinWorkflows()
+  recommendedWorkflows.value = builtinWorkflows.value.slice(0, 6)
 })
 
 watch(
@@ -64,6 +74,40 @@ watch(
     class="block h-full w-full scrollbar-w-none overflow-scroll"
     @scroll="handleScroll"
   >
+    <!-- 推荐模板区域 -->
+    <div v-if="recommendedWorkflows.length > 0" class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-base font-medium text-gray-900">推荐模板</div>
+        <router-link
+          to="/store/workflows"
+          class="text-sm text-blue-600 hover:text-blue-700"
+        >
+          查看更多 &rarr;
+        </router-link>
+      </div>
+      <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-w-none">
+        <a-card
+          v-for="tmpl in recommendedWorkflows"
+          :key="tmpl.id"
+          hoverable
+          class="cursor-pointer rounded-lg flex-shrink-0 w-[240px]"
+          @click="async () => await handleAddBuiltinWorkflowToSpace(tmpl.id)"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <a-avatar :size="32" shape="square" class="bg-blue-100">
+              <icon-mind-mapping class="text-blue-700" />
+            </a-avatar>
+            <div class="flex flex-col flex-1 min-w-0">
+              <div class="text-sm font-bold text-gray-900 truncate">{{ tmpl.name }}</div>
+              <div class="text-xs text-gray-400">{{ tmpl.node_count }} 节点</div>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 line-clamp-2 h-[32px]">
+            {{ tmpl.description }}
+          </div>
+        </a-card>
+      </div>
+    </div>
     <!-- 底部工作流列表 -->
     <a-row :gutter="[20, 20]" class="flex-1">
       <!-- 有数据的UI状态 -->

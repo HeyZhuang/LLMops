@@ -32,8 +32,8 @@ class AppConfigType(str, Enum):
 # 应用默认配置信息
 DEFAULT_APP_CONFIG = {
     "model_config": {
-        "provider": "openai",
-        "model": "gpt-4o-mini",
+        "provider": "tongyi",
+        "model": "qwen-plus",
         "parameters": {
             "temperature": 0.5,
             "top_p": 0.85,
@@ -78,5 +78,9 @@ DEFAULT_APP_CONFIG = {
         "outputs_config": {
             "enable": False,
         },
+    },
+    "multi_agent_config": {
+        "enable": False,
+        "sub_agents": [],
     },
 }

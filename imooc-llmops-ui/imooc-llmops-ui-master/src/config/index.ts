@@ -26,6 +26,8 @@ export const QueueEvent = {
   agentMessage: 'agent_message',
   agentAction: 'agent_action',
   datasetRetrieval: 'dataset_retrieval',
+  agentDelegation: 'agent_delegation',
+  subAgentEnd: 'sub_agent_end',
   agentEnd: 'agent_end',
   stop: 'stop',
   error: 'error',

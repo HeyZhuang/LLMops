@@ -323,12 +323,20 @@ class WorkflowService(BaseService):
                 self.update(workflow, **{
                     "is_debug_passed": True,
                 })
-            except Exception:
+            except Exception as e:
+                import logging
+                logging.exception(f"工作流调试异常: {e}")
                 self.update(workflow_result, **{
                     "status": WorkflowResultStatus.FAILED,
                     "state": node_results,
                     "latency": (time.perf_counter() - start_at)
                 })
+                # 向前端发送错误事件
+                error_data = {
+                    "id": str(uuid.uuid4()),
+                    "message": str(e),
+                }
+                yield f"event: error\ndata: {json.dumps(error_data)}\n\n"
 
         return handle_stream()
 

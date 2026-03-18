@@ -1,0 +1,145 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000004"
+category: "data"
+name: "信息提取器"
+tool_call_name: "data_extractor"
+icon: ""
+description: "从非结构化文本中提取关键信息，通过LLM提取后使用模板格式化输出结构化结果"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "44444444-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收待提取的文本"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "text"
+          description: "待提取信息的文本"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "extract_fields"
+          description: "需要提取的字段（如：姓名、电话、地址）"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: "姓名, 电话, 邮箱, 地址"
+          meta: {}
+    - id: "44444444-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "提取信息"
+      description: "从文本中提取关键信息"
+      position:
+        x: 300
+        y: 200
+      prompt: "请从以下文本中提取指定的字段信息。\n\n文本内容：\n{{text}}\n\n需要提取的字段：{{extract_fields}}\n\n要求：\n1. 严格按照JSON格式输出\n2. 每个字段作为一个key\n3. 如果某个字段在文本中找不到，值设为null\n4. 仅输出JSON，不要其他说明\n\n输出示例：\n{\"字段1\": \"值1\", \"字段2\": \"值2\"}"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.1
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 2048
+      inputs:
+        - name: "text"
+          description: "原文"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "44444444-1111-1111-1111-000000000001"
+              ref_var_name: "text"
+          meta: {}
+        - name: "extract_fields"
+          description: "提取字段"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "44444444-1111-1111-1111-000000000001"
+              ref_var_name: "extract_fields"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "44444444-1111-1111-1111-000000000003"
+      node_type: "template_transform"
+      title: "格式化输出"
+      description: "将提取结果格式化为结构化报告"
+      position:
+        x: 600
+        y: 200
+      template: "## 信息提取结果\n\n提取字段：{{extract_fields}}\n\n### 提取数据\n{{extracted_data}}\n\n---\n*以上信息由AI自动提取，请人工核实*"
+      inputs:
+        - name: "extract_fields"
+          description: "提取字段列表"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "44444444-1111-1111-1111-000000000001"
+              ref_var_name: "extract_fields"
+          meta: {}
+        - name: "extracted_data"
+          description: "提取结果"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "44444444-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "44444444-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出格式化结果"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "result"
+          description: "格式化的提取结果"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "44444444-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-4444-1111-1111-000000000001"
+      source: "44444444-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "44444444-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-4444-1111-1111-000000000002"
+      source: "44444444-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "44444444-1111-1111-1111-000000000003"
+      target_type: "template_transform"
+    - id: "eeeeeeee-4444-1111-1111-000000000003"
+      source: "44444444-1111-1111-1111-000000000003"
+      source_type: "template_transform"
+      target: "44444444-1111-1111-1111-000000000004"
+      target_type: "end"

@@ -42,6 +42,24 @@ export type GetAppsWithPageResponse = BasePaginatorResponse<{
   created_at: number
 }>
 
+// 子Agent配置类型
+export type SubAgentConfig = {
+  name: string
+  description: string
+  model_config: { provider: string; model: string; parameters: Record<string, any> }
+  preset_prompt: string
+  tools: GetDraftAppConfigResponse['data']['tools']
+  workflows: { id: string; name: string; icon: string; description: string }[]
+  datasets: { id: string; name: string; icon: string; description: string }[]
+  max_iteration_count: number
+}
+
+// 多Agent配置类型
+export type MultiAgentConfig = {
+  enable: boolean
+  sub_agents: SubAgentConfig[]
+}
+
 // 获取特定应用的草稿配置响应结构
 export type GetDraftAppConfigResponse = BaseResponse<{
   id: string
@@ -74,6 +92,7 @@ export type GetDraftAppConfigResponse = BaseResponse<{
     inputs_config: { enable: boolean; preset_response: string }
     outputs_config: { enable: boolean }
   }
+  multi_agent_config: MultiAgentConfig
   updated_at: number
   created_at: number
 }>
@@ -99,6 +118,7 @@ export type UpdateDraftAppConfigRequest = {
     inputs_config: { enable: boolean; preset_response: string }
     outputs_config: { enable: boolean }
   }
+  multi_agent_config?: MultiAgentConfig
 }
 
 // 获取应用的调试会话消息列表响应结构
@@ -118,6 +138,7 @@ export type GetDebugConversationMessagesWithPageResponse = BasePaginatorResponse
     tool: string
     tool_input: Record<string, any>
     latency: number
+    sub_agent_name?: string
     created_at: number
   }[]
   created_at: number

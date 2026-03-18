@@ -1,0 +1,154 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000006"
+category: "service"
+name: "智能客服"
+tool_call_name: "customer_service"
+icon: ""
+description: "识别用户意图并生成专业客服回复，支持常见问题自动应答，提升客户服务效率"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "66666666-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收用户咨询内容"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "user_message"
+          description: "用户咨询内容"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "service_context"
+          description: "服务背景信息（产品/公司介绍）"
+          required: false
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+    - id: "66666666-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "意图识别"
+      description: "识别用户咨询意图"
+      position:
+        x: 300
+        y: 200
+      prompt: "你是一位智能客服意图识别专家。请分析以下用户消息，识别其意图类型。\n\n用户消息：{{user_message}}\n\n请按以下格式输出：\n意图类型：[咨询/投诉/建议/退换货/技术支持/其他]\n意图描述：[简要描述用户的具体需求]\n情绪判断：[积极/中性/消极]\n紧急程度：[高/中/低]\n关键信息：[提取的关键信息点]"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.3
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 1024
+      inputs:
+        - name: "user_message"
+          description: "用户消息"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "66666666-1111-1111-1111-000000000001"
+              ref_var_name: "user_message"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "66666666-1111-1111-1111-000000000003"
+      node_type: "llm"
+      title: "生成回复"
+      description: "根据意图生成专业客服回复"
+      position:
+        x: 600
+        y: 200
+      prompt: "你是一位专业的客服代表，请根据用户的咨询内容和意图分析，生成一份专业、友好的回复。\n\n用户原始消息：{{user_message}}\n\n意图分析结果：\n{{intent_analysis}}\n\n服务背景信息：{{service_context}}\n\n回复要求：\n1. 语气友好、专业\n2. 直接回应用户的需求\n3. 提供具体的解决方案或建议\n4. 如需进一步信息，礼貌地询问\n5. 控制回复长度在200字以内"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.5
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 2048
+      inputs:
+        - name: "user_message"
+          description: "用户消息"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "66666666-1111-1111-1111-000000000001"
+              ref_var_name: "user_message"
+          meta: {}
+        - name: "intent_analysis"
+          description: "意图分析结果"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "66666666-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+        - name: "service_context"
+          description: "服务背景"
+          required: false
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "66666666-1111-1111-1111-000000000001"
+              ref_var_name: "service_context"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "66666666-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出客服回复"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "reply"
+          description: "客服回复"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "66666666-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-6666-1111-1111-000000000001"
+      source: "66666666-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "66666666-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-6666-1111-1111-000000000002"
+      source: "66666666-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "66666666-1111-1111-1111-000000000003"
+      target_type: "llm"
+    - id: "eeeeeeee-6666-1111-1111-000000000003"
+      source: "66666666-1111-1111-1111-000000000003"
+      source_type: "llm"
+      target: "66666666-1111-1111-1111-000000000004"
+      target_type: "end"

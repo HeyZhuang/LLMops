@@ -153,6 +153,7 @@ class AppConfig(db.Model):
         server_default=text("'{\"enable\": true}'::jsonb"),
     )  # 回答后生成建议问题
     review_config = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))  # 审核配置
+    multi_agent_config = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))  # 多智能体配置
     updated_at = Column(
         DateTime,
         nullable=False,
@@ -198,6 +199,7 @@ class AppConfigVersion(db.Model):
         server_default=text("'{\"enable\": true}'::jsonb"),
     )  # 回答后生成建议问题
     review_config = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))  # 审核配置
+    multi_agent_config = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))  # 多智能体配置
     version = Column(Integer, nullable=False, server_default=text("0"))  # 发布版本号
     config_type = Column(String(255), nullable=False, server_default=text("''::character varying"))  # 配置类型
     updated_at = Column(

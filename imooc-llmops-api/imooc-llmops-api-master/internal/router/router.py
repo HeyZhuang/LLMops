@@ -25,6 +25,7 @@ from internal.handler import (
     ApiKeyHandler,
     OpenAPIHandler,
     BuiltinAppHandler,
+    BuiltinWorkflowHandler,
     WorkflowHandler,
     LanguageModelHandler,
     AssistantAgentHandler,
@@ -52,6 +53,7 @@ class Router:
     api_key_handler: ApiKeyHandler
     openapi_handler: OpenAPIHandler
     builtin_app_handler: BuiltinAppHandler
+    builtin_workflow_handler: BuiltinWorkflowHandler
     workflow_handler: WorkflowHandler
     language_model_handler: LanguageModelHandler
     assistant_agent_handler: AssistantAgentHandler
@@ -340,6 +342,16 @@ class Router:
 
         # 11.工作流模块
         bp.add_url_rule("/workflows", view_func=self.workflow_handler.get_workflows_with_page)
+
+        # 11.5 内置工作流模板模块
+        bp.add_url_rule("/builtin-workflows/categories", view_func=self.builtin_workflow_handler.get_builtin_workflow_categories)
+        bp.add_url_rule("/builtin-workflows", view_func=self.builtin_workflow_handler.get_builtin_workflows)
+        bp.add_url_rule(
+            "/builtin-workflows/add-builtin-workflow-to-space",
+            methods=["POST"],
+            view_func=self.builtin_workflow_handler.add_builtin_workflow_to_space,
+        )
+
         bp.add_url_rule("/workflows", methods=["POST"], view_func=self.workflow_handler.create_workflow)
         bp.add_url_rule("/workflows/<uuid:workflow_id>", view_func=self.workflow_handler.get_workflow)
         bp.add_url_rule(

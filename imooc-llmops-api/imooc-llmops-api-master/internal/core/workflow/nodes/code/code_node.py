@@ -10,6 +10,8 @@ import time
 from typing import Optional
 
 from langchain_core.runnables import RunnableConfig
+from RestrictedPython import compile_restricted
+from RestrictedPython.Guards import safe_globals, safer_getattr
 
 from internal.core.workflow.entities.node_entity import NodeResult, NodeStatus
 from internal.core.workflow.entities.variable_entity import VARIABLE_TYPE_DEFAULT_VALUE_MAP
@@ -18,6 +20,52 @@ from internal.core.workflow.nodes import BaseNode
 from internal.core.workflow.utils.helper import extract_variables_from_state
 from internal.exception import FailException
 from .code_entity import CodeNodeData
+
+# 安全的内置函数白名单
+_SAFE_BUILTINS = {
+    "True": True,
+    "False": False,
+    "None": None,
+    "abs": abs,
+    "all": all,
+    "any": any,
+    "bool": bool,
+    "chr": chr,
+    "dict": dict,
+    "divmod": divmod,
+    "enumerate": enumerate,
+    "filter": filter,
+    "float": float,
+    "format": format,
+    "frozenset": frozenset,
+    "hasattr": hasattr,
+    "hash": hash,
+    "int": int,
+    "isinstance": isinstance,
+    "issubclass": issubclass,
+    "iter": iter,
+    "len": len,
+    "list": list,
+    "map": map,
+    "max": max,
+    "min": min,
+    "next": next,
+    "ord": ord,
+    "pow": pow,
+    "print": print,
+    "range": range,
+    "repr": repr,
+    "reversed": reversed,
+    "round": round,
+    "set": set,
+    "slice": slice,
+    "sorted": sorted,
+    "str": str,
+    "sum": sum,
+    "tuple": tuple,
+    "type": type,
+    "zip": zip,
+}
 
 
 class CodeNode(BaseNode):
@@ -30,7 +78,7 @@ class CodeNode(BaseNode):
         start_at = time.perf_counter()
         inputs_dict = extract_variables_from_state(self.node_data.inputs, state)
 
-        # todo:2.执行Python代码，该方法目前可以执行任意的Python代码，所以非常危险，后期需要单独将这部分功能迁移到沙箱中或者指定容器中运行和项目分离
+        # 2.在沙箱中执行Python代码
         result = self._execute_function(self.node_data.code, params=inputs_dict)
 
         # 3.检测函数的返回值是否为字典
@@ -62,9 +110,9 @@ class CodeNode(BaseNode):
 
     @classmethod
     def _execute_function(cls, code: str, *args, **kwargs):
-        """执行Python函数代码"""
+        """在RestrictedPython沙箱中执行Python函数代码"""
         try:
-            # 1.解析代码为AST(抽象语法树)
+            # 1.解析代码为AST(抽象语法树)进行结构校验
             tree = ast.parse(code)
 
             # 2.定义变量用于检查是否找到main函数
@@ -95,14 +143,27 @@ class CodeNode(BaseNode):
             if not main_func:
                 raise FailException("代码中必须包含名为main的函数")
 
-            # 10.代码通过AST校验，执行代码
-            local_vars = {}
-            exec(code, {}, local_vars)
+            # 10.使用RestrictedPython编译代码
+            compiled = compile_restricted(code, filename="<user_code>", mode="exec")
 
-            # 11.调用并执行main函数
+            # 11.构建受限的全局命名空间
+            restricted_globals = dict(safe_globals)
+            restricted_globals["__builtins__"] = _SAFE_BUILTINS
+            restricted_globals["_getattr_"] = safer_getattr
+            restricted_globals["_getitem_"] = lambda obj, key: obj[key]
+            restricted_globals["_getiter_"] = iter
+            restricted_globals["_iter_unpack_sequence_"] = None
+
+            # 12.在受限环境中执行代码
+            local_vars = {}
+            exec(compiled, restricted_globals, local_vars)
+
+            # 13.调用并执行main函数
             if "main" in local_vars and callable(local_vars["main"]):
                 return local_vars["main"](*args, **kwargs)
             else:
                 raise FailException("main函数必须是一个可调用的函数")
+        except FailException:
+            raise
         except Exception as e:
-            raise FailException("Python代码执行出错")
+            raise FailException(f"Python代码执行出错: {e}")

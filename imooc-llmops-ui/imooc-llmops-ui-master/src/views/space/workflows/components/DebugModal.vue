@@ -70,7 +70,11 @@ const onSubmit = async ({ errors }: { errors: Record<string, ValidatedError> | u
 
   // 6.4 调用hooks发起请求
   await handleDebugWorkflow(props.workflow_id, form.value, (event_response) => {
-    nodeResults.value.push(event_response?.data)
+    if (event_response?.event === 'error') {
+      debugWorkflowError.value = event_response?.data?.message || '工作流运行异常'
+    } else {
+      nodeResults.value.push(event_response?.data)
+    }
   })
 }
 

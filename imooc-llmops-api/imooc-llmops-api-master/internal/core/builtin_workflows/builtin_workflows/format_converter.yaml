@@ -1,0 +1,144 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000005"
+category: "data"
+name: "JSON格式转换"
+tool_call_name: "format_converter"
+icon: ""
+description: "通过代码节点解析输入数据并进行格式转换处理，使用模板节点格式化最终输出"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "55555555-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收JSON数据"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "json_data"
+          description: "JSON格式的数据"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "output_format"
+          description: "输出格式（如：csv、markdown_table、yaml）"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: "markdown_table"
+          meta: {}
+    - id: "55555555-1111-1111-1111-000000000002"
+      node_type: "code"
+      title: "解析数据"
+      description: "解析JSON数据并转换格式"
+      position:
+        x: 300
+        y: 200
+      code: "import json\n\ndef main(params):\n    json_data = params.get('json_data', '{}')\n    output_format = params.get('output_format', 'markdown_table')\n    \n    try:\n        data = json.loads(json_data)\n    except json.JSONDecodeError:\n        return {'result': 'JSON解析错误，请检查输入格式', 'status': 'error'}\n    \n    if output_format == 'csv':\n        if isinstance(data, list) and len(data) > 0:\n            headers = list(data[0].keys())\n            lines = [','.join(headers)]\n            for row in data:\n                lines.append(','.join(str(row.get(h, '')) for h in headers))\n            return {'result': '\\n'.join(lines), 'status': 'success'}\n        else:\n            return {'result': json.dumps(data, ensure_ascii=False), 'status': 'success'}\n    elif output_format == 'yaml':\n        if isinstance(data, dict):\n            lines = []\n            for k, v in data.items():\n                lines.append(f'{k}: {v}')\n            return {'result': '\\n'.join(lines), 'status': 'success'}\n        else:\n            return {'result': json.dumps(data, ensure_ascii=False, indent=2), 'status': 'success'}\n    else:\n        if isinstance(data, list) and len(data) > 0:\n            headers = list(data[0].keys())\n            lines = ['| ' + ' | '.join(headers) + ' |']\n            lines.append('| ' + ' | '.join(['---'] * len(headers)) + ' |')\n            for row in data:\n                lines.append('| ' + ' | '.join(str(row.get(h, '')) for h in headers) + ' |')\n            return {'result': '\\n'.join(lines), 'status': 'success'}\n        else:\n            return {'result': json.dumps(data, ensure_ascii=False, indent=2), 'status': 'success'}\n"
+      inputs:
+        - name: "json_data"
+          description: "JSON数据"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "55555555-1111-1111-1111-000000000001"
+              ref_var_name: "json_data"
+          meta: {}
+        - name: "output_format"
+          description: "输出格式"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "55555555-1111-1111-1111-000000000001"
+              ref_var_name: "output_format"
+          meta: {}
+      outputs:
+        - name: "result"
+          description: "转换结果"
+          type: "string"
+          value:
+            type: "generated"
+            content: ""
+        - name: "status"
+          description: "处理状态"
+          type: "string"
+          value:
+            type: "generated"
+            content: ""
+    - id: "55555555-1111-1111-1111-000000000003"
+      node_type: "template_transform"
+      title: "格式化输出"
+      description: "格式化最终输出结果"
+      position:
+        x: 600
+        y: 200
+      template: "## 格式转换结果\n\n处理状态：{{status}}\n\n### 转换后数据\n{{result}}"
+      inputs:
+        - name: "result"
+          description: "转换结果"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "55555555-1111-1111-1111-000000000002"
+              ref_var_name: "result"
+          meta: {}
+        - name: "status"
+          description: "处理状态"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "55555555-1111-1111-1111-000000000002"
+              ref_var_name: "status"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "55555555-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出转换结果"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "output"
+          description: "格式化转换结果"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "55555555-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-5555-1111-1111-000000000001"
+      source: "55555555-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "55555555-1111-1111-1111-000000000002"
+      target_type: "code"
+    - id: "eeeeeeee-5555-1111-1111-000000000002"
+      source: "55555555-1111-1111-1111-000000000002"
+      source_type: "code"
+      target: "55555555-1111-1111-1111-000000000003"
+      target_type: "template_transform"
+    - id: "eeeeeeee-5555-1111-1111-000000000003"
+      source: "55555555-1111-1111-1111-000000000003"
+      source_type: "template_transform"
+      target: "55555555-1111-1111-1111-000000000004"
+      target_type: "end"

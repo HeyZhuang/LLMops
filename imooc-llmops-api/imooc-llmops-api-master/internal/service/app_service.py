@@ -26,8 +26,8 @@ from redis import Redis
 from sqlalchemy import func, desc
 from werkzeug.datastructures import FileStorage
 
-from internal.core.agent.agents import FunctionCallAgent, AgentQueueManager, ReACTAgent
-from internal.core.agent.entities.agent_entity import AgentConfig
+from internal.core.agent.agents import FunctionCallAgent, AgentQueueManager, ReACTAgent, SupervisorAgent
+from internal.core.agent.entities.agent_entity import AgentConfig, SupervisorAgentConfig, SubAgentConfig
 from internal.core.agent.entities.queue_entity import QueueEvent
 from internal.core.language_model import LanguageModelManager
 from internal.core.memory import TokenBufferMemory
@@ -330,6 +330,7 @@ class AppService(BaseService):
             text_to_speech=draft_app_config["text_to_speech"],
             suggested_after_answer=draft_app_config["suggested_after_answer"],
             review_config=draft_app_config["review_config"],
+            multi_agent_config=draft_app_config.get("multi_agent_config", DEFAULT_APP_CONFIG["multi_agent_config"]),
         )
 
         # 3.更新应用关联的运行时配置以及状态
@@ -546,19 +547,68 @@ class AppService(BaseService):
             )
             tools.extend(workflow_tools)
 
-        # 10.根据LLM是否支持tool_call决定使用不同的Agent
-        agent_class = FunctionCallAgent if ModelFeature.TOOL_CALL in llm.features else ReACTAgent
-        agent = agent_class(
-            llm=llm,
-            agent_config=AgentConfig(
-                user_id=account.id,
-                invoke_from=InvokeFrom.DEBUGGER,
-                preset_prompt=draft_app_config["preset_prompt"],
-                enable_long_term_memory=draft_app_config["long_term_memory"]["enable"],
-                tools=tools,
-                review_config=draft_app_config["review_config"],
-            ),
-        )
+        # 11.检测是否启用多智能体模式
+        multi_agent_config = draft_app_config.get("multi_agent_config", {})
+        if multi_agent_config.get("enable") and multi_agent_config.get("sub_agents"):
+            # 11.1 构建子Agent配置列表
+            sub_agent_configs = []
+            for sa in multi_agent_config["sub_agents"]:
+                # 构建子Agent的LangChain工具
+                sa_tools = self.app_config_service.get_langchain_tools_by_tools_config(sa.get("tools", []))
+                # 如果子Agent关联了工作流，也构建工具
+                if sa.get("workflows"):
+                    sa_workflow_tools = self.app_config_service.get_langchain_tools_by_workflow_ids(
+                        [wf["id"] for wf in sa["workflows"]]
+                    )
+                    sa_tools.extend(sa_workflow_tools)
+                # 如果子Agent关联了知识库，构建检索工具
+                if sa.get("datasets"):
+                    sa_dataset_retrieval = self.retrieval_service.create_langchain_tool_from_search(
+                        flask_app=current_app._get_current_object(),
+                        dataset_ids=[ds["id"] for ds in sa["datasets"]],
+                        account_id=account.id,
+                        retrival_source=RetrievalSource.APP,
+                        **draft_app_config["retrieval_config"],
+                    )
+                    sa_tools.append(sa_dataset_retrieval)
+
+                sub_agent_configs.append(SubAgentConfig(
+                    name=sa["name"],
+                    description=sa["description"],
+                    model_config_data=sa.get("model_config", {}),
+                    preset_prompt=sa.get("preset_prompt", ""),
+                    tools=sa_tools,
+                    max_iteration_count=sa.get("max_iteration_count", 5),
+                ))
+
+            # 11.2 创建SupervisorAgent
+            agent = SupervisorAgent(
+                llm=llm,
+                agent_config=SupervisorAgentConfig(
+                    user_id=account.id,
+                    invoke_from=InvokeFrom.DEBUGGER,
+                    preset_prompt=draft_app_config["preset_prompt"],
+                    enable_long_term_memory=draft_app_config["long_term_memory"]["enable"],
+                    tools=tools,
+                    review_config=draft_app_config["review_config"],
+                    sub_agents=sub_agent_configs,
+                ),
+                language_model_service=self.language_model_service,
+            )
+        else:
+            # 12.原有单Agent逻辑：根据LLM是否支持tool_call决定使用不同的Agent
+            agent_class = FunctionCallAgent if ModelFeature.TOOL_CALL in llm.features else ReACTAgent
+            agent = agent_class(
+                llm=llm,
+                agent_config=AgentConfig(
+                    user_id=account.id,
+                    invoke_from=InvokeFrom.DEBUGGER,
+                    preset_prompt=draft_app_config["preset_prompt"],
+                    enable_long_term_memory=draft_app_config["long_term_memory"]["enable"],
+                    tools=tools,
+                    review_config=draft_app_config["review_config"],
+                ),
+            )
 
         agent_thoughts = {}
         for agent_thought in agent.stream({
@@ -566,18 +616,18 @@ class AppService(BaseService):
             "history": history,
             "long_term_memory": debug_conversation.summary,
         }):
-            # 11.提取thought以及answer
+            # 13.提取thought以及answer
             event_id = str(agent_thought.id)
 
-            # 12.将数据填充到agent_thought，便于存储到数据库服务中
+            # 14.将数据填充到agent_thought，便于存储到数据库服务中
             if agent_thought.event != QueueEvent.PING:
-                # 13.除了agent_message数据为叠加，其他均为覆盖
+                # 15.除了agent_message数据为叠加，其他均为覆盖
                 if agent_thought.event == QueueEvent.AGENT_MESSAGE:
                     if event_id not in agent_thoughts:
-                        # 14.初始化智能体消息事件
+                        # 16.初始化智能体消息事件
                         agent_thoughts[event_id] = agent_thought
                     else:
-                        # 15.叠加智能体消息
+                        # 17.叠加智能体消息
                         agent_thoughts[event_id] = agent_thoughts[event_id].model_copy(update={
                             "thought": agent_thoughts[event_id].thought + agent_thought.thought,
                             # 消息相关数据
@@ -596,12 +646,12 @@ class AppService(BaseService):
                             "latency": agent_thought.latency,
                         })
                 else:
-                    # 16.处理其他类型事件的消息
+                    # 18.处理其他类型事件的消息
                     agent_thoughts[event_id] = agent_thought
             data = {
                 **agent_thought.model_dump(include={
                     "event", "thought", "observation", "tool", "tool_input", "answer",
-                    "total_token_count", "total_price", "latency",
+                    "total_token_count", "total_price", "latency", "sub_agent_name",
                 }),
                 "id": event_id,
                 "conversation_id": str(debug_conversation.id),
@@ -704,6 +754,7 @@ class AppService(BaseService):
             "tools", "workflows", "datasets", "retrieval_config",
             "long_term_memory", "opening_statement", "opening_questions",
             "speech_to_text", "text_to_speech", "suggested_after_answer", "review_config",
+            "multi_agent_config",
         ]
 
         # 2.判断传递的草稿配置是否在可接受字段内
@@ -1055,5 +1106,50 @@ class AppService(BaseService):
                         and review_config["inputs_config"]["preset_response"].strip() == ""
                 ):
                     raise ValidateErrorException("输入审核预设响应不能为空")
+
+        # 17.校验multi_agent_config多智能体配置
+        if "multi_agent_config" in draft_app_config:
+            multi_agent_config = draft_app_config["multi_agent_config"]
+
+            # 17.1 校验格式
+            if not isinstance(multi_agent_config, dict):
+                raise ValidateErrorException("多智能体配置格式错误")
+            # 17.2 校验enable字段
+            if "enable" not in multi_agent_config or not isinstance(multi_agent_config.get("enable"), bool):
+                raise ValidateErrorException("多智能体配置enable字段必须是布尔值")
+            # 17.3 校验sub_agents字段
+            if "sub_agents" not in multi_agent_config or not isinstance(multi_agent_config.get("sub_agents"), list):
+                raise ValidateErrorException("多智能体配置sub_agents必须是列表")
+            # 17.4 启用时至少2个、最多5个子Agent
+            sub_agents = multi_agent_config["sub_agents"]
+            if multi_agent_config["enable"]:
+                if len(sub_agents) < 2:
+                    raise ValidateErrorException("启用多智能体模式时至少需要配置2个子Agent")
+                if len(sub_agents) > 5:
+                    raise ValidateErrorException("子Agent数量不能超过5个")
+            # 17.5 校验每个子Agent
+            names = set()
+            for sa in sub_agents:
+                if not isinstance(sa, dict):
+                    raise ValidateErrorException("子Agent配置必须是字典")
+                if not sa.get("name") or not isinstance(sa.get("name"), str):
+                    raise ValidateErrorException("子Agent名称不能为空且必须是字符串")
+                if not sa.get("description") or not isinstance(sa.get("description"), str):
+                    raise ValidateErrorException("子Agent描述不能为空且必须是字符串")
+                if sa["name"] in names:
+                    raise ValidateErrorException(f"子Agent名称 '{sa['name']}' 重复")
+                names.add(sa["name"])
+                # 校验模型配置（宽松校验，不存在则使用默认值）
+                if "model_config" in sa and isinstance(sa["model_config"], dict):
+                    if not sa["model_config"].get("provider") or not sa["model_config"].get("model"):
+                        sa["model_config"] = DEFAULT_APP_CONFIG["model_config"]
+                # 校验工具列表格式
+                if "tools" in sa:
+                    if not isinstance(sa["tools"], list):
+                        sa["tools"] = []
+                # 校验最大迭代次数
+                if "max_iteration_count" in sa:
+                    if not isinstance(sa["max_iteration_count"], int) or not (1 <= sa["max_iteration_count"] <= 20):
+                        sa["max_iteration_count"] = 5
 
         return draft_app_config

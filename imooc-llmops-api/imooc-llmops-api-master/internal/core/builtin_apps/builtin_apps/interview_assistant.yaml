@@ -4,8 +4,8 @@ name: "面试助手"
 icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/5af57d6d-d71b-4396-9c59-89ae55145b94.png"
 description: "专业的面试助手，帮助HR和面试官设计面试问题、评估候选人能力，并提供面试流程优化建议。"
 model_config:
-  provider: "openai"
-  model: "gpt-4o-mini"
+  provider: "tongyi"
+  model: "qwen-plus"
   parameters:
     temperature: 0.5
     top_p: 0.85

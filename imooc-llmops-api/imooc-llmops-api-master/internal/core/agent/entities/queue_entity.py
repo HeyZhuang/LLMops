@@ -20,6 +20,8 @@ class QueueEvent(str, Enum):
     AGENT_MESSAGE = "agent_message"  # 智能体消息事件
     AGENT_ACTION = "agent_action"  # 智能体动作
     DATASET_RETRIEVAL = "dataset_retrieval"  # 知识库检索事件
+    AGENT_DELEGATION = "agent_delegation"  # 子Agent调度事件
+    SUB_AGENT_END = "sub_agent_end"  # 子Agent结束事件
     AGENT_END = "agent_end"  # 智能体结束事件
     STOP = "stop"  # 智能体停止事件
     ERROR = "error"  # 智能体错误事件
@@ -40,6 +42,9 @@ class AgentThought(BaseModel):
     # 工具相关的字段
     tool: str = ""  # 调用工具的名字
     tool_input: dict = Field(default_factory=dict)  # 工具的输入
+
+    # 子Agent相关字段
+    sub_agent_name: str = ""  # 子Agent名称（多智能体模式下使用）
 
     # 消息相关的数据
     message: list[dict] = Field(default_factory=dict)  # 推理使用的消息列表

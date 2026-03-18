@@ -14,6 +14,7 @@ from .app_handler import AppHandler
 from .assistant_agent_handler import AssistantAgentHandler
 from .auth_handler import AuthHandler
 from .builtin_app_handler import BuiltinAppHandler
+from .builtin_workflow_handler import BuiltinWorkflowHandler
 from .builtin_tool_handler import BuiltinToolHandler
 from .conversation_handler import ConversationHandler
 from .dataset_handler import DatasetHandler
@@ -41,6 +42,7 @@ __all__ = [
     "ApiKeyHandler",
     "OpenAPIHandler",
     "BuiltinAppHandler",
+    "BuiltinWorkflowHandler",
     "WorkflowHandler",
     "LanguageModelHandler",
     "AssistantAgentHandler",

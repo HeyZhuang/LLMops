@@ -6,6 +6,7 @@ import ReviewConfigAbilityItem from './abilities/ReviewConfigAbilityItem.vue'
 import DatasetsAbilityItem from './abilities/DatasetsAbilityItem.vue'
 import ToolsAbilityItem from './abilities/ToolsAbilityItem.vue'
 import WorkflowsAbilityItem from './abilities/WorkflowsAbilityItem.vue'
+import MultiAgentAbilityItem from './abilities/MultiAgentAbilityItem.vue'
 
 // 1.定义自定义组件所需数据
 const props = defineProps({
@@ -14,6 +15,7 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:draft_app_config'])
 const defaultActivateKeys = [
+  'multi_agent',
   'tools',
   'workflows',
   'datasets',
@@ -35,6 +37,18 @@ const defaultActivateKeys = [
           <icon-down v-if="active" />
           <icon-right v-else />
         </template>
+        <!-- 多智能体协作 -->
+        <multi-agent-ability-item
+          :multi_agent_config="props.draft_app_config.multi_agent_config"
+          @update:multi_agent_config="
+            (multi_agent_config) =>
+              emits('update:draft_app_config', {
+                ...props.draft_app_config,
+                multi_agent_config,
+              })
+          "
+          :app_id="props.app_id"
+        />
         <!-- 扩展插件组件 -->
         <tools-ability-item
           :tools="props.draft_app_config.tools"

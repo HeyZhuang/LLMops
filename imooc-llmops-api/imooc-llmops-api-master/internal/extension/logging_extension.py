@@ -6,10 +6,23 @@
 @File    : logging_extension.py
 """
 import logging
+import os
 import os.path
+import platform
+import shutil
 from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask
+
+
+def _windows_rotate(source: str, dest: str):
+    """Windows兼容的日志轮转：复制后截断，避免PermissionError。"""
+    try:
+        shutil.copy2(source, dest)
+        with open(source, "w"):
+            pass
+    except Exception:
+        pass
 
 
 def init_app(app: Flask):
@@ -30,6 +43,11 @@ def init_app(app: Flask):
         backupCount=30,
         encoding="utf-8",
     )
+
+    # Windows下用复制+截断替代rename，避免多进程文件锁冲突
+    if platform.system() == "Windows":
+        handler.rotator = _windows_rotate
+
     formatter = logging.Formatter(
         "[%(asctime)s.%(msecs)03d] %(filename)s -> %(funcName)s line:%(lineno)d [%(levelname)s]: %(message)s"
     )

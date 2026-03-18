@@ -1,0 +1,135 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000010"
+category: "automation"
+name: "周报生成"
+tool_call_name: "report_generator"
+icon: ""
+description: "将工作内容整理成结构化周报，自动分类和总结，生成专业的工作报告"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "aaaaaaaa-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收工作内容记录"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "work_notes"
+          description: "本周工作内容（可随意记录）"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "team_name"
+          description: "团队/部门名称"
+          required: false
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+    - id: "aaaaaaaa-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "整理归类"
+      description: "将工作内容分类整理"
+      position:
+        x: 300
+        y: 200
+      prompt: "你是一位工作汇报专家。请将以下工作记录进行分类整理。\n\n工作记录：\n{{work_notes}}\n\n请按以下分类整理：\n1. **本周完成的工作**：列出已完成的任务，每项注明完成度\n2. **进行中的工作**：列出正在进行的任务，注明当前进度\n3. **遇到的问题与解决方案**：遇到的困难及解决情况\n4. **下周工作计划**：根据当前工作进展，建议的下周计划\n5. **需要协调的事项**：需要跨团队协调或领导支持的事项\n\n每个分类下用编号列表组织，内容简洁明了。"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.5
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 4096
+      inputs:
+        - name: "work_notes"
+          description: "工作记录"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "aaaaaaaa-1111-1111-1111-000000000001"
+              ref_var_name: "work_notes"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "aaaaaaaa-1111-1111-1111-000000000003"
+      node_type: "template_transform"
+      title: "生成周报"
+      description: "使用模板格式化周报"
+      position:
+        x: 600
+        y: 200
+      template: "# 工作周报\n\n**团队/部门**：{{team_name}}\n**报告周期**：本周\n\n---\n\n{{organized_content}}\n\n---\n\n*本周报由AI辅助生成，请根据实际情况进行调整*"
+      inputs:
+        - name: "team_name"
+          description: "团队名称"
+          required: false
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "aaaaaaaa-1111-1111-1111-000000000001"
+              ref_var_name: "team_name"
+          meta: {}
+        - name: "organized_content"
+          description: "整理后的内容"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "aaaaaaaa-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "aaaaaaaa-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出周报"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "weekly_report"
+          description: "生成的周报"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "aaaaaaaa-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-aaaa-1111-1111-000000000001"
+      source: "aaaaaaaa-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "aaaaaaaa-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-aaaa-1111-1111-000000000002"
+      source: "aaaaaaaa-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "aaaaaaaa-1111-1111-1111-000000000003"
+      target_type: "template_transform"
+    - id: "eeeeeeee-aaaa-1111-1111-000000000003"
+      source: "aaaaaaaa-1111-1111-1111-000000000003"
+      source_type: "template_transform"
+      target: "aaaaaaaa-1111-1111-1111-000000000004"
+      target_type: "end"

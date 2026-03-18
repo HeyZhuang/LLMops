@@ -4,8 +4,8 @@ name: "员工培训顾问"
 icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/5af57d6d-d71b-4396-9c59-89ae55145b94.png"
 description: "专业的员工培训顾问，帮助企业制定培训计划、设计培训课程、评估培训效果，提升团队整体能力。"
 model_config:
-  provider: "openai"
-  model: "gpt-4o-mini"
+  provider: "tongyi"
+  model: "qwen-plus"
   parameters:
     temperature: 0.5
     top_p: 0.85

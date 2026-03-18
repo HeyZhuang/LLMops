@@ -4,8 +4,8 @@ name: "文案写手"
 icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/153da84b-5a0c-4665-9745-9022eb846598.jpg"
 description: "专业的文案写手，擅长撰写各类营销文案、品牌故事、社交媒体内容和广告创意文案。"
 model_config:
-  provider: "openai"
-  model: "gpt-4o-mini"
+  provider: "tongyi"
+  model: "qwen-plus"
   parameters:
     temperature: 0.7
     top_p: 0.9

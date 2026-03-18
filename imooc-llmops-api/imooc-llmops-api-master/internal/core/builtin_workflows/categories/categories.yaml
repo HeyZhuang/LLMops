@@ -1,0 +1,8 @@
+- category: content
+  name: 内容生成
+- category: data
+  name: 数据处理
+- category: service
+  name: 客服对话
+- category: automation
+  name: 自动化

@@ -68,6 +68,18 @@ const route = useRoute()
       插件广场
     </router-link>
     <router-link
+      to="/store/workflows"
+      :class="[
+        'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',
+        'hover:text-gold-400 hover:bg-gold-50',
+        route.path.startsWith('/store/workflows') ? 'nav-active !text-gold-600 font-medium' : ''
+      ]"
+    >
+      <icon-mind-mapping v-if="route.path.startsWith('/store/workflows')" />
+      <icon-mind-mapping v-else />
+      工作流广场
+    </router-link>
+    <router-link
       to="/openapi"
       :class="[
         'flex items-center gap-2 h-9 leading-9 rounded-lg transition-all px-3 text-abyss-500',

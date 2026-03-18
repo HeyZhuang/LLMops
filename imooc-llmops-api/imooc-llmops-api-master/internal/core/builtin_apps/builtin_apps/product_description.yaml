@@ -4,8 +4,8 @@ name: "商品文案生成器"
 icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/153da84b-5a0c-4665-9745-9022eb846598.jpg"
 description: "专业的商品文案生成器，快速生成吸引人的商品标题、详情描述和卖点提炼，助力产品销售。"
 model_config:
-  provider: "openai"
-  model: "gpt-4o-mini"
+  provider: "tongyi"
+  model: "qwen-plus"
   parameters:
     temperature: 0.7
     top_p: 0.9

@@ -1,0 +1,164 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000007"
+category: "service"
+name: "知识库问答"
+tool_call_name: "knowledge_qa"
+icon: ""
+description: "对用户问题进行改写优化后生成专业回答，提高问答质量和准确性"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "77777777-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收用户问题"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "question"
+          description: "用户问题"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "domain"
+          description: "知识领域（如：技术文档、产品手册、FAQ）"
+          required: false
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+    - id: "77777777-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "问题改写"
+      description: "优化用户问题以提高检索和回答质量"
+      position:
+        x: 300
+        y: 200
+      prompt: "你是一位问题优化专家。请对以下用户问题进行改写和优化，使其更加清晰、具体，便于检索和回答。\n\n原始问题：{{question}}\n知识领域：{{domain}}\n\n改写要求：\n1. 消除歧义，补全省略信息\n2. 如果问题模糊，拆解为更具体的子问题\n3. 添加必要的上下文限定\n4. 保持问题的核心意图不变\n\n请输出改写后的问题（如有多个子问题，用换行分隔）。"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.3
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 1024
+      inputs:
+        - name: "question"
+          description: "原始问题"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "77777777-1111-1111-1111-000000000001"
+              ref_var_name: "question"
+          meta: {}
+        - name: "domain"
+          description: "知识领域"
+          required: false
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "77777777-1111-1111-1111-000000000001"
+              ref_var_name: "domain"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "77777777-1111-1111-1111-000000000003"
+      node_type: "llm"
+      title: "生成答案"
+      description: "根据改写后的问题生成专业回答"
+      position:
+        x: 600
+        y: 200
+      prompt: "你是一位知识问答专家。请根据以下改写优化后的问题，提供详细、准确的回答。\n\n原始问题：{{question}}\n优化后的问题：{{refined_question}}\n知识领域：{{domain}}\n\n回答要求：\n1. 回答准确、全面\n2. 结构清晰，使用标题和列表\n3. 提供具体的示例或说明\n4. 如果涉及步骤，使用编号列表\n5. 标注任何不确定的信息\n6. 使用Markdown格式"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.5
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 4096
+      inputs:
+        - name: "question"
+          description: "原始问题"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "77777777-1111-1111-1111-000000000001"
+              ref_var_name: "question"
+          meta: {}
+        - name: "refined_question"
+          description: "改写后的问题"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "77777777-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+        - name: "domain"
+          description: "知识领域"
+          required: false
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "77777777-1111-1111-1111-000000000001"
+              ref_var_name: "domain"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "77777777-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出回答结果"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "answer"
+          description: "生成的回答"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "77777777-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-7777-1111-1111-000000000001"
+      source: "77777777-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "77777777-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-7777-1111-1111-000000000002"
+      source: "77777777-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "77777777-1111-1111-1111-000000000003"
+      target_type: "llm"
+    - id: "eeeeeeee-7777-1111-1111-000000000003"
+      source: "77777777-1111-1111-1111-000000000003"
+      source_type: "llm"
+      target: "77777777-1111-1111-1111-000000000004"
+      target_type: "end"

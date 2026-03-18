@@ -1,0 +1,106 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000002"
+category: "content"
+name: "多语言翻译"
+tool_call_name: "translator"
+icon: ""
+description: "将输入文本翻译为目标语言，支持多种语言互译，翻译结果准确流畅"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "22222222-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收待翻译文本和目标语言"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "text"
+          description: "待翻译文本"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "target_language"
+          description: "目标语言（如：英语、日语、法语）"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: "英语"
+          meta: {}
+    - id: "22222222-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "翻译文本"
+      description: "将文本翻译为目标语言"
+      position:
+        x: 300
+        y: 200
+      prompt: "你是一位专业翻译专家。请将以下文本翻译为{{target_language}}。\n\n原文：\n{{text}}\n\n翻译要求：\n1. 保持原文含义准确\n2. 语言地道流畅\n3. 保留原文格式\n4. 仅输出翻译结果，无需其他说明"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.3
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 4096
+      inputs:
+        - name: "text"
+          description: "待翻译文本"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "22222222-1111-1111-1111-000000000001"
+              ref_var_name: "text"
+          meta: {}
+        - name: "target_language"
+          description: "目标语言"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "22222222-1111-1111-1111-000000000001"
+              ref_var_name: "target_language"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "22222222-1111-1111-1111-000000000003"
+      node_type: "end"
+      title: "结束"
+      description: "输出翻译结果"
+      position:
+        x: 600
+        y: 200
+      outputs:
+        - name: "translation"
+          description: "翻译结果"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "22222222-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-2222-1111-1111-000000000001"
+      source: "22222222-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "22222222-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-2222-1111-1111-000000000002"
+      source: "22222222-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "22222222-1111-1111-1111-000000000003"
+      target_type: "end"

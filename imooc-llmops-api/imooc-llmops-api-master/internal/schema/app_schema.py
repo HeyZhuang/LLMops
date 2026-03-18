@@ -194,6 +194,7 @@ class GetDebugConversationMessagesWithPageResp(Schema):
                 "tool": agent_thought.tool,
                 "tool_input": agent_thought.tool_input,
                 "latency": agent_thought.latency,
+                "sub_agent_name": getattr(agent_thought, 'sub_agent_name', ''),
                 "created_at": datetime_to_timestamp(agent_thought.created_at),
             } for agent_thought in data.agent_thoughts],
             "created_at": datetime_to_timestamp(data.created_at),

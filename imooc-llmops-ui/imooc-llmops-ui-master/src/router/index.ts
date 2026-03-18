@@ -71,6 +71,11 @@ const router = createRouter({
           component: () => import('@/views/store/tools/ListView.vue'),
         },
         {
+          path: 'store/workflows',
+          name: 'store-workflows-list',
+          component: () => import('@/views/store/workflows/ListView.vue'),
+        },
+        {
           path: 'openapi',
           component: () => import('@/views/openapi/OpenAPILayoutView.vue'),
           children: [

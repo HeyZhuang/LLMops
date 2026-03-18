@@ -21,8 +21,8 @@ from .module import injector
 dotenv.load_dotenv()
 
 # 将poppler加入PATH（Windows PDF解析依赖）
-poppler_path = r"D:\dev\poppler\poppler-24.08.0\Library\bin"
-if poppler_path not in os.environ.get("PATH", ""):
+poppler_path = os.getenv("POPPLER_PATH")
+if poppler_path and poppler_path not in os.environ.get("PATH", ""):
     os.environ["PATH"] = poppler_path + os.pathsep + os.environ.get("PATH", "")
 
 # 2.构建LLMOps项目配置
@@ -41,4 +41,4 @@ app = Http(
 celery = app.extensions["celery"]
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=os.getenv("FLASK_DEBUG", "False").lower() in ("true", "1"), host='0.0.0.0', port=5000)

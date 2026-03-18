@@ -145,6 +145,7 @@ const handleSubmit = async () => {
             tool: data?.tool,
             tool_input: data?.tool_input,
             latency: data?.latency,
+            sub_agent_name: data?.sub_agent_name || '',
             created_at: 0,
           })
         } else {
@@ -167,7 +168,7 @@ const handleSubmit = async () => {
         // 5.16 事件为timeout，则人工提示超时信息
         messages.value[0].answer = '当前Agent执行已超时，无法得到答案，请重试'
       } else {
-        // 5.15 处理其他类型的事件，直接填充覆盖数据
+        // 5.17 处理其他类型的事件（含agent_delegation, sub_agent_end等），直接填充覆盖数据
         position += 1
         agent_thoughts.push({
           id: event_id,
@@ -178,6 +179,7 @@ const handleSubmit = async () => {
           tool: data?.tool,
           tool_input: data?.tool_input,
           latency: data?.latency,
+          sub_agent_name: data?.sub_agent_name || '',
           created_at: 0,
         })
       }

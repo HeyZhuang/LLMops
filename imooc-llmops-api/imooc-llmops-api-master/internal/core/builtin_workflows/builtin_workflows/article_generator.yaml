@@ -1,0 +1,144 @@
+id: "a1b2c3d4-e5f6-7890-abcd-100000000001"
+category: "content"
+name: "文章生成器"
+tool_call_name: "article_generator"
+icon: ""
+description: "根据主题和关键词自动生成结构化文章，先生成大纲再撰写正文，支持分步生成高质量内容"
+author: "LLMOps-Platform"
+created_at: 1710720000
+draft_graph:
+  nodes:
+    - id: "11111111-1111-1111-1111-000000000001"
+      node_type: "start"
+      title: "开始"
+      description: "接收文章主题和关键词"
+      position:
+        x: 0
+        y: 200
+      inputs:
+        - name: "topic"
+          description: "文章主题"
+          required: true
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+        - name: "keywords"
+          description: "关键词（可选）"
+          required: false
+          type: "string"
+          value:
+            type: "literal"
+            content: ""
+          meta: {}
+    - id: "11111111-1111-1111-1111-000000000002"
+      node_type: "llm"
+      title: "生成大纲"
+      description: "根据主题和关键词生成文章大纲"
+      position:
+        x: 300
+        y: 200
+      prompt: "请根据以下主题和关键词，生成一篇文章的详细大纲。\n\n主题：{{topic}}\n关键词：{{keywords}}\n\n要求：\n1. 包含引言、3-5个主要章节和结论\n2. 每个章节列出2-3个要点\n3. 大纲结构清晰，逻辑连贯"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.7
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 4096
+      inputs:
+        - name: "topic"
+          description: "文章主题"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "11111111-1111-1111-1111-000000000001"
+              ref_var_name: "topic"
+          meta: {}
+        - name: "keywords"
+          description: "关键词"
+          required: false
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "11111111-1111-1111-1111-000000000001"
+              ref_var_name: "keywords"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "11111111-1111-1111-1111-000000000003"
+      node_type: "llm"
+      title: "撰写正文"
+      description: "根据大纲撰写完整文章正文"
+      position:
+        x: 600
+        y: 200
+      prompt: "请根据以下大纲，撰写一篇完整的文章。\n\n文章大纲：\n{{outline}}\n\n要求：\n1. 每个章节内容详实，有具体论述\n2. 语言流畅，段落间过渡自然\n3. 使用Markdown格式输出\n4. 文章总字数不少于1000字"
+      model_config:
+        provider: "tongyi"
+        model: "qwen-plus"
+        parameters:
+          temperature: 0.7
+          top_p: 0.9
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 8192
+      inputs:
+        - name: "outline"
+          description: "文章大纲"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "11111111-1111-1111-1111-000000000002"
+              ref_var_name: "output"
+          meta: {}
+      outputs:
+        - name: "output"
+          value:
+            type: "generated"
+            content: ""
+    - id: "11111111-1111-1111-1111-000000000004"
+      node_type: "end"
+      title: "结束"
+      description: "输出生成的文章"
+      position:
+        x: 900
+        y: 200
+      outputs:
+        - name: "article"
+          description: "生成的文章"
+          required: true
+          type: "string"
+          value:
+            type: "ref"
+            content:
+              ref_node_id: "11111111-1111-1111-1111-000000000003"
+              ref_var_name: "output"
+          meta: {}
+  edges:
+    - id: "eeeeeeee-1111-1111-1111-000000000001"
+      source: "11111111-1111-1111-1111-000000000001"
+      source_type: "start"
+      target: "11111111-1111-1111-1111-000000000002"
+      target_type: "llm"
+    - id: "eeeeeeee-1111-1111-1111-000000000002"
+      source: "11111111-1111-1111-1111-000000000002"
+      source_type: "llm"
+      target: "11111111-1111-1111-1111-000000000003"
+      target_type: "llm"
+    - id: "eeeeeeee-1111-1111-1111-000000000003"
+      source: "11111111-1111-1111-1111-000000000003"
+      source_type: "llm"
+      target: "11111111-1111-1111-1111-000000000004"
+      target_type: "end"
