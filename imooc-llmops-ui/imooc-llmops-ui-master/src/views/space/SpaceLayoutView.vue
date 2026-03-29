@@ -105,6 +105,13 @@ watch(
           >
             知识库
           </router-link>
+          <router-link
+            to="/space/prompt-templates"
+            class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
+            active-class="!bg-white !text-gold-600 shadow-sm font-medium"
+          >
+            Prompt模板
+          </router-link>
         </div>
         <!-- 右侧搜索 -->
         <a-input-search

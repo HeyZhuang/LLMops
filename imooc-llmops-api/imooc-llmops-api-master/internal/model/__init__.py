@@ -14,6 +14,8 @@ from .dataset import Dataset, Document, Segment, KeywordTable, DatasetQuery, Pro
 from .end_user import EndUser
 from .upload_file import UploadFile
 from .workflow import Workflow, WorkflowResult
+from .message_feedback import MessageFeedback
+from .prompt_template import PromptTemplate
 
 __all__ = [
     "App", "AppDatasetJoin", "AppConfig", "AppConfigVersion",
@@ -24,4 +26,6 @@ __all__ = [
     "Account", "AccountOAuth",
     "ApiKey", "EndUser",
     "Workflow", "WorkflowResult",
+    "MessageFeedback",
+    "PromptTemplate",
 ]

@@ -12,3 +12,13 @@ export type GetAppAnalysisResponse = BaseResponse<{
   avg_of_conversation_messages_trend: { x_axis: number[]; y_axis: number[] }
   cost_consumption_trend: { x_axis: number[]; y_axis: number[] }
 }>
+
+// Token成本分析响应结构
+export type GetTokenCostAnalysisResponse = BaseResponse<{
+  total_token_count: number
+  total_cost: number
+  avg_token_per_message: number
+  message_count: number
+  token_trend: { x_axis: number[]; y_axis: number[] }
+  cost_trend: { x_axis: number[]; y_axis: number[] }
+}>

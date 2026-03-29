@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { getAppAnalysis } from '@/services/analysis'
+import { getAppAnalysis, getTokenCostAnalysis } from '@/services/analysis'
 
 export const useGetAppAnalysis = () => {
   // 1.定义hooks所需数据
@@ -19,4 +19,21 @@ export const useGetAppAnalysis = () => {
   }
 
   return { loading, app_analysis, loadAppAnalysis }
+}
+
+export const useGetTokenCostAnalysis = () => {
+  const loading = ref(false)
+  const token_cost = ref<Record<string, any>>({})
+
+  const loadTokenCostAnalysis = async (app_id: string) => {
+    try {
+      loading.value = true
+      const resp = await getTokenCostAnalysis(app_id)
+      token_cost.value = resp.data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { loading, token_cost, loadTokenCostAnalysis }
 }

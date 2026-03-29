@@ -12,6 +12,29 @@ const props = defineProps({
   },
 })
 const visible = ref(false)
+
+// 2.解析知识库检索结果
+const getRetrievalResults = (agent_thought: Record<string, any>) => {
+  // 优先使用结构化数据
+  if (agent_thought.observation_data && agent_thought.observation_data.length > 0) {
+    return agent_thought.observation_data
+  }
+  // 回退：尝试解析observation JSON
+  try {
+    if (agent_thought.observation) {
+      const parsed = JSON.parse(agent_thought.observation)
+      if (Array.isArray(parsed)) {
+        return parsed.map((item: any) => ({
+          content: typeof item === 'string' ? item : JSON.stringify(item),
+          score: 0,
+        }))
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return []
+}
 </script>
 
 <template>
@@ -93,6 +116,26 @@ const visible = ref(false)
           class="text-xs text-abyss-400 line-clamp-4 break-all"
         >
           {{ agent_thought.thought || '-' }}
+        </div>
+        <!-- 知识库检索结果 - 结构化展示 -->
+        <div v-else-if="agent_thought.event === 'dataset_retrieval'" class="text-xs text-abyss-400">
+          <div
+            v-for="(result, rIdx) in getRetrievalResults(agent_thought)"
+            :key="rIdx"
+            class="mb-2 p-2 rounded-lg bg-parchment-100 border border-gold-dim"
+          >
+            <div class="flex items-center gap-1 mb-1">
+              <icon-storage class="text-gold-400" :size="12" />
+              <span class="text-abyss-500 font-medium">引用片段 {{ rIdx + 1 }}</span>
+              <span v-if="result.score" class="ml-auto text-gold-500 text-[10px]">
+                相似度: {{ (result.score * 100).toFixed(1) }}%
+              </span>
+            </div>
+            <div class="line-clamp-3 break-all">{{ result.content }}</div>
+          </div>
+          <div v-if="getRetrievalResults(agent_thought).length === 0" class="line-clamp-4 break-all">
+            {{ agent_thought.observation || '-' }}
+          </div>
         </div>
         <div v-else class="text-xs text-abyss-400 line-clamp-4 break-all">
           {{ agent_thought.observation || '-' }}

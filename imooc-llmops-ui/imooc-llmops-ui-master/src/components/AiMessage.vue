@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, type PropType } from 'vue'
+import { computed, ref, type PropType } from 'vue'
 import MarkdownIt from 'markdown-it'
 import DotFlashing from '@/components/DotFlashing.vue'
 import AgentThought from './AgentThought.vue'
+import { useCreateFeedback } from '@/hooks/use-feedback'
 import 'github-markdown-css'
 
 // 1.定义自定义组件所需数据
@@ -25,12 +26,30 @@ const props = defineProps({
   },
   suggested_questions: { type: Array as PropType<string[]>, default: () => [], required: false },
   message_class: { type: String, default: '!bg-parchment-200', required: false },
+  message_id: { type: String, default: '', required: false },
+  feedback: {
+    type: Object as PropType<{ rating: string; content: string } | null>,
+    default: null,
+    required: false,
+  },
 })
 const emits = defineEmits(['selectSuggestedQuestion'])
 const md = MarkdownIt()
 const compiledMarkdown = computed(() => {
   return md.render(props.answer)
 })
+
+// 反馈相关
+const currentRating = ref<string>(props.feedback?.rating || '')
+const { loading: feedbackLoading, handleCreateFeedback } = useCreateFeedback()
+
+const handleFeedback = async (rating: 'like' | 'dislike') => {
+  if (!props.message_id || feedbackLoading.value) return
+  // 如果已经点过同一个，取消不做操作
+  if (currentRating.value === rating) return
+  currentRating.value = rating
+  await handleCreateFeedback(props.message_id, rating)
+}
 </script>
 
 <template>
@@ -77,7 +96,31 @@ const compiledMarkdown = computed(() => {
           </div>
           <div class="text-abyss-400">{{ props.total_token_count }} Tokens</div>
         </a-space>
-        <!-- 操作 -->
+        <!-- 反馈按钮 -->
+        <div v-if="props.message_id && !props.loading" class="flex items-center gap-1 ml-3">
+          <a-tooltip content="有帮助">
+            <div
+              :class="[
+                'cursor-pointer p-1 rounded transition-all',
+                currentRating === 'like' ? 'text-gold-500 bg-gold-50' : 'text-abyss-300 hover:text-gold-400'
+              ]"
+              @click="handleFeedback('like')"
+            >
+              <icon-thumb-up :size="14" />
+            </div>
+          </a-tooltip>
+          <a-tooltip content="无帮助">
+            <div
+              :class="[
+                'cursor-pointer p-1 rounded transition-all',
+                currentRating === 'dislike' ? 'text-red-400 bg-red-50' : 'text-abyss-300 hover:text-red-400'
+              ]"
+              @click="handleFeedback('dislike')"
+            >
+              <icon-thumb-down :size="14" />
+            </div>
+          </a-tooltip>
+        </div>
       </div>
       <!-- 建议问题列表 -->
       <div v-if="props.suggested_questions.length > 0" class="flex flex-col gap-2">

@@ -7,7 +7,8 @@ import { LineChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import moment from 'moment'
-import { useGetAppAnalysis } from '@/hooks/use-analysis'
+import { useGetAppAnalysis, useGetTokenCostAnalysis } from '@/hooks/use-analysis'
+import { useGetFeedbackStats } from '@/hooks/use-feedback'
 import OverviewIndicator from '@/components/OverviewIndicator.vue'
 
 use([GridComponent, LineChart, CanvasRenderer, TooltipComponent])
@@ -15,6 +16,8 @@ use([GridComponent, LineChart, CanvasRenderer, TooltipComponent])
 // 1.定义页面所需数据
 const route = useRoute()
 const { loading: getAppAnalysisLoading, app_analysis, loadAppAnalysis } = useGetAppAnalysis()
+const { loading: getTokenCostLoading, token_cost, loadTokenCostAnalysis } = useGetTokenCostAnalysis()
+const { loading: getFeedbackStatsLoading, feedback_stats, loadFeedbackStats } = useGetFeedbackStats()
 
 // 2.计算趋势数据，让其符合ECharts的格式
 const trendOption = computed(() => {
@@ -92,7 +95,10 @@ const trendOption = computed(() => {
 })
 
 onMounted(() => {
-  loadAppAnalysis(String(route.params?.app_id))
+  const appId = String(route.params?.app_id)
+  loadAppAnalysis(appId)
+  loadTokenCostAnalysis(appId)
+  loadFeedbackStats(appId)
 })
 </script>
 
@@ -163,6 +169,57 @@ onMounted(() => {
               <icon-code class="text-gold-400" />
             </template>
           </overview-indicator>
+        </div>
+      </a-spin>
+    </div>
+    <!-- 用户反馈统计 -->
+    <div class="flex flex-col gap-5 mb-5">
+      <div class="flex items-baseline gap-1">
+        <div class="text-base text-abyss-800 font-semibold">用户反馈</div>
+      </div>
+      <a-spin :loading="getFeedbackStatsLoading">
+        <div class="flex items-center gap-4">
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">总反馈数</div>
+            <div class="text-2xl text-abyss-800 font-bold">{{ feedback_stats?.total_count ?? 0 }}</div>
+          </div>
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">好评数</div>
+            <div class="text-2xl text-gold-500 font-bold">{{ feedback_stats?.like_count ?? 0 }}</div>
+          </div>
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">差评数</div>
+            <div class="text-2xl text-red-400 font-bold">{{ feedback_stats?.dislike_count ?? 0 }}</div>
+          </div>
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">满意度</div>
+            <div class="text-2xl text-abyss-800 font-bold">
+              {{ ((feedback_stats?.satisfaction_rate ?? 0) * 100).toFixed(1) }}%
+            </div>
+          </div>
+        </div>
+      </a-spin>
+    </div>
+    <!-- Token成本分析 -->
+    <div class="flex flex-col gap-5 mb-5">
+      <div class="flex items-baseline gap-1">
+        <div class="text-base text-abyss-800 font-semibold">Token成本分析</div>
+        <div class="text-xs text-abyss-400">(过去7天)</div>
+      </div>
+      <a-spin :loading="getTokenCostLoading">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">总Token消耗</div>
+            <div class="text-2xl text-abyss-800 font-bold">{{ token_cost?.total_token_count ?? 0 }}</div>
+          </div>
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">总费用 (RMB)</div>
+            <div class="text-2xl text-gold-500 font-bold">{{ (token_cost?.total_cost ?? 0).toFixed(4) }}</div>
+          </div>
+          <div class="flex-1 glass metal-border rounded-xl p-5">
+            <div class="text-abyss-400 text-sm mb-2">平均每次Token</div>
+            <div class="text-2xl text-abyss-800 font-bold">{{ (token_cost?.avg_token_per_message ?? 0).toFixed(0) }}</div>
+          </div>
         </div>
       </a-spin>
     </div>

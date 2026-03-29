@@ -13,6 +13,7 @@ from uuid import UUID
 
 from injector import inject
 from redis import Redis
+from sqlalchemy import func
 
 from internal.model import Account, App, Message
 from pkg.sqlalchemy import SQLAlchemy
@@ -223,4 +224,46 @@ class AnalysisService(BaseService):
             "active_accounts_trend": active_accounts_trend,
             "avg_of_conversation_messages_trend": avg_of_conversation_messages_trend,
             "cost_consumption_trend": cost_consumption_trend,
+        }
+
+    def get_token_cost_analysis(self, app_id: UUID, account: Account) -> dict[str, Any]:
+        """获取Token成本分析数据"""
+        # 1.验证权限
+        app = self.app_service.get_app(app_id, account)
+
+        # 2.时间范围：过去7天
+        today = datetime.now()
+        today_midnight = datetime.combine(today, datetime.min.time())
+        seven_days_ago = today_midnight - timedelta(days=7)
+
+        # 3.查询近7天消息统计
+        messages = self.get_messages_by_time_range(app, seven_days_ago, today_midnight)
+
+        # 4.计算总量
+        total_token_count = sum(message.total_token_count for message in messages)
+        total_cost = float(sum(message.total_price for message in messages))
+        message_count = len(messages)
+        avg_token_per_message = float(total_token_count / message_count) if message_count > 0 else 0
+
+        # 5.按日计算Token趋势
+        token_trend = {"x_axis": [], "y_axis": []}
+        cost_trend = {"x_axis": [], "y_axis": []}
+        for day in range(7):
+            start = today_midnight - timedelta(7 - day)
+            end = today_midnight - timedelta(7 - day - 1)
+            day_messages = [m for m in messages if start <= m.created_at < end]
+            day_tokens = sum(m.total_token_count for m in day_messages)
+            day_cost = float(sum(m.total_price for m in day_messages))
+            token_trend["x_axis"].append(int(start.timestamp()))
+            token_trend["y_axis"].append(day_tokens)
+            cost_trend["x_axis"].append(int(start.timestamp()))
+            cost_trend["y_axis"].append(day_cost)
+
+        return {
+            "total_token_count": total_token_count,
+            "total_cost": total_cost,
+            "avg_token_per_message": avg_token_per_message,
+            "message_count": message_count,
+            "token_trend": token_trend,
+            "cost_trend": cost_trend,
         }

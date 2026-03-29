@@ -43,6 +43,11 @@ const router = createRouter({
               name: 'space-datasets-list',
               component: () => import('@/views/space/datasets/ListView.vue'),
             },
+            {
+              path: 'prompt-templates',
+              name: 'space-prompt-templates-list',
+              component: () => import('@/views/space/prompt-templates/ListView.vue'),
+            },
           ],
         },
         {

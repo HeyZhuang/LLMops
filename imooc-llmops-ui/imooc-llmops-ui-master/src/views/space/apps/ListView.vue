@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import moment from 'moment/moment'
 import { useCopyApp, useDeleteApp, useGetAppsWithPage } from '@/hooks/use-app'
+import { useExportApp } from '@/hooks/use-app-export'
 import { onMounted, ref, watch } from 'vue'
 import { useAccountStore } from '@/stores/account'
 import CreateOrUpdateAppModal from './components/CreateOrUpdateAppModal.vue'
+import ImportAppModal from './components/ImportAppModal.vue'
 import { useRoute } from 'vue-router'
 
 // 1.定义页面所需数据
@@ -13,11 +15,13 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:create-type'])
 const createOrUpdateAppModalVisible = ref(false)
+const importAppModalVisible = ref(false)
 const updateAppId = ref('')
 const accountStore = useAccountStore()
 const { handleCopyApp } = useCopyApp()
 const { loading: getAppsWithPageLoading, apps, paginator, loadApps } = useGetAppsWithPage()
 const { handleDeleteApp } = useDeleteApp()
+const { handleExportApp } = useExportApp()
 
 // 2.定义滚动数据分页处理器
 const handleScroll = async (event: UIEvent) => {
@@ -69,6 +73,18 @@ watch(
   >
     <!-- 底部应用列表 -->
     <a-row :gutter="[20, 20]" class="flex-1">
+      <!-- 导入应用按钮卡片 -->
+      <a-col :span="6">
+        <div
+          class="glass metal-border rounded-xl p-5 cursor-pointer card-hover h-full flex items-center justify-center min-h-[200px]"
+          @click="importAppModalVisible = true"
+        >
+          <div class="flex flex-col items-center gap-2 text-abyss-400">
+            <icon-import :size="32" class="text-gold-400" />
+            <div class="text-sm">导入应用</div>
+          </div>
+        </div>
+      </a-col>
       <!-- 有数据的UI状态 -->
       <a-col v-for="app in apps" :key="app.id" :span="6">
         <div class="app-card glass metal-border rounded-xl p-5 cursor-pointer card-hover">
@@ -118,6 +134,7 @@ watch(
                     编辑应用
                   </a-doption>
                   <a-doption @click="async () => await handleCopyApp(app.id)">创建副本</a-doption>
+                  <a-doption @click="async () => await handleExportApp(app.id)">导出应用</a-doption>
                   <a-doption
                     class="!text-red-400"
                     @click="
@@ -176,6 +193,11 @@ watch(
     <create-or-update-app-modal
       v-model:visible="createOrUpdateAppModalVisible"
       v-model:app_id="updateAppId"
+      :callback="() => loadApps(true, String(route.query?.search_word ?? ''))"
+    />
+    <!-- 导入应用模态窗 -->
+    <import-app-modal
+      v-model:visible="importAppModalVisible"
       :callback="() => loadApps(true, String(route.query?.search_word ?? ''))"
     />
   </a-spin>

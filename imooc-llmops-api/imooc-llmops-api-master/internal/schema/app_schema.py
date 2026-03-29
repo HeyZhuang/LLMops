@@ -5,6 +5,7 @@
 @Author  : ccckz@protonmail.com
 @File    : app_schema.py
 """
+import json
 from uuid import UUID
 
 from flask_wtf import FlaskForm
@@ -15,6 +16,7 @@ from wtforms.validators import DataRequired, Length, URL, ValidationError, Optio
 from internal.entity.app_entity import AppStatus
 from internal.lib.helper import datetime_to_timestamp
 from internal.model import App, AppConfigVersion, Message
+from internal.model.message_feedback import MessageFeedback
 from pkg.paginator import PaginatorReq
 
 
@@ -174,10 +176,23 @@ class GetDebugConversationMessagesWithPageResp(Schema):
     total_token_count = fields.Integer(dump_default=0)
     latency = fields.Float(dump_default=0)
     agent_thoughts = fields.List(fields.Dict, dump_default=[])
+    feedback = fields.Dict(dump_default=None)
     created_at = fields.Integer(dump_default=0)
 
     @pre_dump
     def process_data(self, data: Message, **kwargs):
+        # 查询该消息的反馈
+        from internal.extension.database_extension import db
+        feedback_record = db.session.query(MessageFeedback).filter(
+            MessageFeedback.message_id == data.id,
+        ).first()
+        feedback_data = None
+        if feedback_record:
+            feedback_data = {
+                "rating": feedback_record.rating,
+                "content": feedback_record.content,
+            }
+
         return {
             "id": data.id,
             "conversation_id": data.conversation_id,
@@ -185,12 +200,14 @@ class GetDebugConversationMessagesWithPageResp(Schema):
             "answer": data.answer,
             "total_token_count": data.total_token_count,
             "latency": data.latency,
+            "feedback": feedback_data,
             "agent_thoughts": [{
                 "id": agent_thought.id,
                 "position": agent_thought.position,
                 "event": agent_thought.event,
                 "thought": agent_thought.thought,
                 "observation": agent_thought.observation,
+                "observation_data": self._parse_observation(agent_thought),
                 "tool": agent_thought.tool,
                 "tool_input": agent_thought.tool_input,
                 "latency": agent_thought.latency,
@@ -199,3 +216,27 @@ class GetDebugConversationMessagesWithPageResp(Schema):
             } for agent_thought in data.agent_thoughts],
             "created_at": datetime_to_timestamp(data.created_at),
         }
+
+    @staticmethod
+    def _parse_observation(agent_thought) -> list:
+        """解析dataset_retrieval事件的observation为结构化数据"""
+        if agent_thought.event != "dataset_retrieval":
+            return []
+        try:
+            observation = agent_thought.observation
+            if not observation:
+                return []
+            parsed = json.loads(observation) if isinstance(observation, str) else observation
+            if isinstance(parsed, list):
+                return [
+                    {
+                        "content": item if isinstance(item, str) else str(item),
+                        "score": 0,
+                    }
+                    for item in parsed
+                ]
+            elif isinstance(parsed, str):
+                return [{"content": parsed, "score": 0}]
+            return []
+        except (json.JSONDecodeError, TypeError):
+            return []

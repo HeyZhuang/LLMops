@@ -32,6 +32,9 @@ from internal.handler import (
     AnalysisHandler,
     WebAppHandler,
     ConversationHandler,
+    FeedbackHandler,
+    AppExportHandler,
+    PromptTemplateHandler,
 )
 
 
@@ -60,6 +63,9 @@ class Router:
     analysis_handler: AnalysisHandler
     web_app_handler: WebAppHandler
     conversation_handler: ConversationHandler
+    feedback_handler: FeedbackHandler
+    app_export_handler: AppExportHandler
+    prompt_template_handler: PromptTemplateHandler
 
     def register_router(self, app: Flask):
         """注册路由"""
@@ -426,6 +432,10 @@ class Router:
             "/analysis/<uuid:app_id>",
             view_func=self.analysis_handler.get_app_analysis,
         )
+        bp.add_url_rule(
+            "/analysis/<uuid:app_id>/token-cost",
+            view_func=self.analysis_handler.get_token_cost_analysis,
+        )
 
         # 15.WebApp模块
         bp.add_url_rule("/web-apps/<string:token>", view_func=self.web_app_handler.get_web_app)
@@ -471,6 +481,57 @@ class Router:
             view_func=self.conversation_handler.update_conversation_is_pinned,
         )
 
-        # 17.在应用上注册蓝图
+        # 18.消息反馈模块
+        bp.add_url_rule(
+            "/messages/<uuid:message_id>/feedback",
+            methods=["POST"],
+            view_func=self.feedback_handler.create_feedback,
+        )
+        bp.add_url_rule(
+            "/messages/<uuid:message_id>/feedback",
+            view_func=self.feedback_handler.get_feedback,
+        )
+        bp.add_url_rule(
+            "/apps/<uuid:app_id>/feedback-stats",
+            view_func=self.feedback_handler.get_feedback_stats,
+        )
+
+        # 19.应用导入导出模块
+        bp.add_url_rule(
+            "/apps/<uuid:app_id>/export",
+            view_func=self.app_export_handler.export_app,
+        )
+        bp.add_url_rule(
+            "/apps/import",
+            methods=["POST"],
+            view_func=self.app_export_handler.import_app,
+        )
+
+        # 20.Prompt模板库模块
+        bp.add_url_rule(
+            "/prompt-templates",
+            view_func=self.prompt_template_handler.get_prompt_templates_with_page,
+        )
+        bp.add_url_rule(
+            "/prompt-templates",
+            methods=["POST"],
+            view_func=self.prompt_template_handler.create_prompt_template,
+        )
+        bp.add_url_rule(
+            "/prompt-templates/<uuid:template_id>",
+            view_func=self.prompt_template_handler.get_prompt_template,
+        )
+        bp.add_url_rule(
+            "/prompt-templates/<uuid:template_id>",
+            methods=["POST"],
+            view_func=self.prompt_template_handler.update_prompt_template,
+        )
+        bp.add_url_rule(
+            "/prompt-templates/<uuid:template_id>/delete",
+            methods=["POST"],
+            view_func=self.prompt_template_handler.delete_prompt_template,
+        )
+
+        # 21.在应用上注册蓝图
         app.register_blueprint(bp)
         app.register_blueprint(openapi_bp)

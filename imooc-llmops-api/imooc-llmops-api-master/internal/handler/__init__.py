@@ -26,6 +26,9 @@ from .segment_handler import SegmentHandler
 from .upload_file_handler import UploadFileHandler
 from .web_app_handler import WebAppHandler
 from .workflow_handler import WorkflowHandler
+from .feedback_handler import FeedbackHandler
+from .app_export_handler import AppExportHandler
+from .prompt_template_handler import PromptTemplateHandler
 
 __all__ = [
     "AppHandler",
@@ -49,4 +52,7 @@ __all__ = [
     "AnalysisHandler",
     "WebAppHandler",
     "ConversationHandler",
+    "FeedbackHandler",
+    "AppExportHandler",
+    "PromptTemplateHandler",
 ]

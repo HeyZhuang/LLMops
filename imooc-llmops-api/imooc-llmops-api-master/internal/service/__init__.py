@@ -37,6 +37,9 @@ from .upload_file_service import UploadFileService
 from .vector_database_service import VectorDatabaseService
 from .web_app_service import WebAppService
 from .workflow_service import WorkflowService
+from .feedback_service import FeedbackService
+from .app_export_service import AppExportService
+from .prompt_template_service import PromptTemplateService
 
 __all__ = [
     "BaseService",
@@ -71,4 +74,7 @@ __all__ = [
     "FaissService",
     "AnalysisService",
     "WebAppService",
+    "FeedbackService",
+    "AppExportService",
+    "PromptTemplateService",
 ]

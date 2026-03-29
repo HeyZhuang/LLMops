@@ -3,6 +3,7 @@ import { useUpdateDraftAppConfig } from '@/hooks/use-app'
 import { useOptimizePrompt } from '@/hooks/use-ai'
 import { ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
+import { useGetPromptTemplatesWithPage } from '@/hooks/use-prompt-template'
 
 // 1.定义自定义组件所需数据
 const props = defineProps({
@@ -11,38 +12,43 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:preset_prompt'])
 const optimizeTriggerVisible = ref(false)
+const templateTriggerVisible = ref(false)
 const origin_prompt = ref('')
 const { handleUpdateDraftAppConfig } = useUpdateDraftAppConfig()
 const { loading, optimize_prompt, handleOptimizePrompt } = useOptimizePrompt()
+const { loading: templatesLoading, templates, loadTemplates } = useGetPromptTemplatesWithPage()
 
 // 2.定义替换预设prompt处理器
 const handleReplacePresetPrompt = () => {
-  // 2.1 检测优化prompt是否为空
   if (optimize_prompt.value.trim() === '') {
     Message.warning('优化prompt为空，请重新生成')
     return
   }
-
-  // 2.2 触发时间替换preset_prompt
   emits('update:preset_prompt', optimize_prompt.value)
-
-  // 2.3 触发更新草稿配置函数
   handleUpdateDraftAppConfig(props.app_id, { preset_prompt: optimize_prompt.value })
-
-  // 2.4 隐藏触发器
   optimizeTriggerVisible.value = false
 }
 
 // 3.提交优化prompt处理器
 const handleSubmit = async () => {
-  // 3.1 检测原始prompt是否为空
   if (origin_prompt.value.trim() === '') {
     Message.warning('原始prompt不能为空')
     return
   }
-
-  // 3.2 发起请求获取数据
   await handleOptimizePrompt(origin_prompt.value)
+}
+
+// 4.从模板选择
+const handleOpenTemplates = async () => {
+  templateTriggerVisible.value = true
+  await loadTemplates(true)
+}
+
+const handleSelectTemplate = (content: string) => {
+  emits('update:preset_prompt', content)
+  handleUpdateDraftAppConfig(props.app_id, { preset_prompt: content })
+  templateTriggerVisible.value = false
+  Message.success('已应用模板')
 }
 </script>
 
@@ -51,12 +57,49 @@ const handleSubmit = async () => {
     <!-- 提示标题 -->
     <div class="flex items-center justify-between px-4 mb-4">
       <div class="text-gray-700 font-bold">人设与回复逻辑</div>
-      <a-trigger
-        v-model:popup-visible="optimizeTriggerVisible"
-        :trigger="['click']"
-        position="bl"
-        :popup-translate="[0, 8]"
-      >
+      <div class="flex items-center gap-2">
+        <a-trigger
+          v-model:popup-visible="templateTriggerVisible"
+          :trigger="['click']"
+          position="bl"
+          :popup-translate="[0, 8]"
+        >
+          <a-button size="mini" class="rounded-lg px-2" @click="handleOpenTemplates">
+            <template #icon>
+              <icon-book />
+            </template>
+            模板
+          </a-button>
+          <template #content>
+            <a-card class="rounded-lg w-[320px]">
+              <div class="flex flex-col">
+                <div class="text-sm font-medium text-abyss-700 mb-3">选择Prompt模板</div>
+                <a-spin :loading="templatesLoading">
+                  <div class="max-h-[300px] overflow-auto flex flex-col gap-2">
+                    <div
+                      v-for="tpl in templates"
+                      :key="tpl.id"
+                      class="p-3 border border-gold-dim rounded-lg cursor-pointer hover:bg-gold-50 transition-all"
+                      @click="handleSelectTemplate(tpl.content)"
+                    >
+                      <div class="text-sm text-abyss-700 font-medium">{{ tpl.name }}</div>
+                      <div class="text-xs text-abyss-400 line-clamp-2 mt-1">{{ tpl.content }}</div>
+                    </div>
+                    <div v-if="templates.length === 0" class="text-sm text-abyss-400 text-center py-4">
+                      暂无模板
+                    </div>
+                  </div>
+                </a-spin>
+              </div>
+            </a-card>
+          </template>
+        </a-trigger>
+        <a-trigger
+          v-model:popup-visible="optimizeTriggerVisible"
+          :trigger="['click']"
+          position="bl"
+          :popup-translate="[0, 8]"
+        >
         <a-button size="mini" class="rounded-lg px-2">
           <template #icon>
             <icon-sync />
@@ -109,6 +152,7 @@ const handleSubmit = async () => {
           </a-card>
         </template>
       </a-trigger>
+      </div>
     </div>
     <!-- 输入框容器 -->
     <div class="flex-1">
