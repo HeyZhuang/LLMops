@@ -33,9 +33,9 @@ const shapes = [
 
 // 特性列表（替代原轮播）
 const features = [
-  { icon: '⬡', title: '智能编排', desc: '可视化拖拽构建AI工作流' },
-  { icon: '◈', title: '知识增强', desc: '向量检索 + 语义理解' },
-  { icon: '⎔', title: '多模型支持', desc: 'OpenAI / 通义 / 文心 / Moonshot' },
+  { icon: '⬡', title: '智能问诊', desc: '基于医疗大模型的精准辅助诊断' },
+  { icon: '◈', title: '医学图谱增强', desc: '向量检索 + 专业医学知识库' },
+  { icon: '⎔', title: '多模态医疗融合', desc: '支持影像/报告/病历多源数据引擎' },
 ]
 const activeFeature = ref(0)
 let featureTimer: number
@@ -138,10 +138,10 @@ onUnmounted(() => {
       >
         <!-- 大标题 -->
         <div class="brand-title">
-          <span class="title-line-1">LLM</span>
-          <span class="title-line-2">Ops</span>
+          <span class="title-line-1">医脉</span>
+          <span class="title-line-2">天枢</span>
         </div>
-        <p class="brand-subtitle">企业级大语言模型应用开发与运维平台</p>
+        <p class="brand-subtitle">新一代智慧医疗大语言模型平台</p>
 
         <!-- 金色分割线 -->
         <div class="divider-gold w-20 my-8"></div>
@@ -171,16 +171,14 @@ onUnmounted(() => {
     </div>
 
     <!-- ===== 顶部Logo ===== -->
-    <div class="fixed top-6 left-8 z-50 flex items-center gap-3">
-      <div class="logo-diamond">
-        <div class="diamond-inner">◇</div>
-      </div>
-      <span class="text-gold-shine text-lg font-bold tracking-widest">LLMOps</span>
+    <div class="fixed top-6 left-8 z-50 flex items-center gap-4">
+      <img src="@/assets/images/logo2_transparent.png" alt="医脉天枢" class="h-12 w-auto flex-shrink-0" />
+      <span class="text-gold-shine text-3xl font-bold tracking-widest leading-none pt-1">医脉天枢</span>
     </div>
 
     <!-- ===== 底部信息 ===== -->
     <footer class="fixed bottom-4 left-0 w-full text-center text-abyss-400 text-xs tracking-wider z-50">
-      LLMOps Platform &middot; Enterprise AI Application Platform
+      医脉天枢 (Yimai Tianshu) &middot; Enterprise Medical AI Platform
     </footer>
   </div>
 </template>
@@ -200,9 +198,9 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(30,45,74,0.8) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(212,175,55,0.04) 0%, transparent 50%),
-    linear-gradient(180deg, #080e1a 0%, #0F172A 40%, #0a1020 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(15, 65, 85, 0.8) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(212,175,55,0.06) 0%, transparent 50%),
+    linear-gradient(180deg, #05141e 0%, #0c202f 40%, #061219 100%);
 }
 
 /* ===== 金色粒子 ===== */

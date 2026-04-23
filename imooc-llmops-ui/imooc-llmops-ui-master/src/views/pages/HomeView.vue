@@ -334,7 +334,7 @@ onMounted(async () => {
               v-model="query"
               type="text"
               class="flex-1 outline-0 bg-transparent text-abyss-700 placeholder:text-abyss-300"
-              placeholder="发送消息或创建AI应用..."
+              placeholder="发送消息或创建AI医疗应用..."
               @keyup.enter="handleSubmit"
             />
             <a-button

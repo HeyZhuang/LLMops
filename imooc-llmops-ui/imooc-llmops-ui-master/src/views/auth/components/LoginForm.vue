@@ -107,7 +107,7 @@ const handleSubmit = async ({ errors }: { errors: Record<string, ValidatedError>
 
       <!-- 标题 -->
       <h2 class="card-title">欢迎回来</h2>
-      <p class="card-subtitle">登录 LLMOps 开始构建 AI 应用</p>
+      <p class="card-subtitle">登录 医脉天枢 开始构建智慧医疗 AI 应用</p>
 
       <!-- 分割线 -->
       <div class="divider-gold my-5"></div>

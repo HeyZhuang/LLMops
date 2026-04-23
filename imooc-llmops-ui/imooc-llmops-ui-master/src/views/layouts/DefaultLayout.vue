@@ -43,13 +43,14 @@ onMounted(async () => {
       <div class="glass metal-border shimmer h-full rounded-xl px-3 py-4 flex flex-col justify-between shadow-glass">
         <!-- 上半部分 -->
         <div>
-          <!-- 顶部Logo -->
-          <router-link to="/home" class="block mb-4">
+          <!-- 顶部Logo与系统名称 -->
+          <router-link to="/home" class="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity decoration-transparent">
             <img
-              src="@/assets/images/logo.png"
-              alt="LLMOps"
-              class="h-9 w-[110px] object-contain"
+              src="@/assets/images/logo2_transparent.png"
+              alt="医脉天枢"
+              class="h-10 w-auto object-contain flex-shrink-0"
             />
+            <span class="text-xl font-bold bg-gradient-to-r from-gold-500 to-amber-600 bg-clip-text text-transparent tracking-widest whitespace-nowrap">医脉天枢</span>
           </router-link>
           <!-- 金色分割线 -->
           <div class="divider-gold mb-4"></div>
@@ -59,7 +60,7 @@ onMounted(async () => {
               <template #icon>
                 <icon-plus />
               </template>
-              创建 AI 应用
+              创建医脉天枢:AI医疗应用
             </a-button>
           </router-link>
           <!-- 侧边栏导航 -->
