@@ -27,3 +27,10 @@
   background: "#F9FAFB"
   supported_model_types:
     - chat
+- name: deepseek
+  label: DeepSeek
+  description: DeepSeek提供的大语言模型，例如deepseek-chat和deepseek-reasoner。
+  icon: icon.svg
+  background: "#FFFFFF"
+  supported_model_types:
+    - chat

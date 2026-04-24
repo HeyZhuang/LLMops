@@ -261,8 +261,8 @@ onMounted(async () => {
         <!-- 开场AI对话消息 -->
         <div class="flex gap-2">
           <!-- 左侧图标 -->
-          <a-avatar :size="30" shape="circle" class="flex-shrink-0 !bg-abyss-800 !text-gold-400">
-            <icon-apps />
+          <a-avatar :size="30" shape="circle" class="flex-shrink-0 !bg-transparent">
+            <img src="@/assets/images/ai_avatar.png" alt="ai" class="object-cover w-full h-full" />
           </a-avatar>
           <!-- 右侧名称与消息 -->
           <div class="flex flex-col items-start gap-2">

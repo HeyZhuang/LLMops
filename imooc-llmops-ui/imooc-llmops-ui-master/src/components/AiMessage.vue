@@ -62,8 +62,8 @@ const handleFeedback = async (rating: 'like' | 'dislike') => {
       class="flex-shrink-0 shadow-gold-sm"
       :image-url="props.app?.icon"
     />
-    <a-avatar v-else :size="30" shape="circle" class="flex-shrink-0 !bg-abyss-800 !text-gold-400">
-      <icon-apps />
+    <a-avatar v-else :size="30" shape="circle" class="flex-shrink-0 !bg-transparent">
+      <img src="@/assets/images/ai_avatar.png" alt="ai" class="object-cover w-full h-full" />
     </a-avatar>
     <!-- 右侧名称与消息 -->
     <div class="flex-1 flex flex-col items-start gap-2">

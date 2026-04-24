@@ -39,7 +39,7 @@ const route = useRoute()
     >
       <icon-space-full v-if="route.path.startsWith('/space')" />
       <icon-space v-else />
-      个人空间
+      科室会诊
     </router-link>
     <!-- 分区标题 -->
     <div class="text-abyss-300 text-xs px-3 mt-2 mb-1 uppercase tracking-wider">探索</div>

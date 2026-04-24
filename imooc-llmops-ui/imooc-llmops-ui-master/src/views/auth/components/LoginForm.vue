@@ -162,7 +162,11 @@ const handleSubmit = async ({ errors }: { errors: Record<string, ValidatedError>
           >
             登录
           </a-button>
-          <a-divider>第三方授权</a-divider>
+          <div class="flex items-center gap-3 my-1 w-full opacity-80">
+            <div class="h-px flex-1 bg-gradient-to-r from-transparent to-gold-dim"></div>
+            <span class="text-xs text-abyss-300 font-medium tracking-[2px]">第三方授权</span>
+            <div class="h-px flex-1 bg-gradient-to-l from-transparent to-gold-dim"></div>
+          </div>
           <a-button
             :loading="providerLoading"
             size="large"
@@ -247,7 +251,7 @@ const handleSubmit = async ({ errors }: { errors: Record<string, ValidatedError>
   z-index: 1;
   padding: 40px 36px;
   border-radius: 20px;
-  background: rgba(15,23,42,0.75);
+  background: rgba(8, 24, 32, 0.75);
   backdrop-filter: blur(40px) saturate(150%);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
 }
@@ -302,25 +306,25 @@ const handleSubmit = async ({ errors }: { errors: Record<string, ValidatedError>
 
 /* ===== 表单深色适配 ===== */
 .login-form :deep(.arco-input-wrapper) {
-  background: rgba(255,255,255,0.04) !important;
+  background: transparent !important;
   border: 1px solid rgba(212,175,55,0.12) !important;
   border-radius: 12px !important;
   transition: all 0.3s ease;
 }
 .login-form :deep(.arco-input-wrapper:hover) {
   border-color: rgba(212,175,55,0.3) !important;
-  background: rgba(255,255,255,0.06) !important;
+  background: transparent !important;
 }
 .login-form :deep(.arco-input-wrapper.arco-input-focus) {
   border-color: #D4AF37 !important;
   box-shadow: 0 0 0 3px rgba(212,175,55,0.08), 0 0 20px rgba(212,175,55,0.06) !important;
-  background: rgba(255,255,255,0.06) !important;
+  background: transparent !important;
 }
 .login-form :deep(.arco-input) {
-  color: rgba(255,255,255,0.9);
+  color: #ffffff !important;
 }
 .login-form :deep(.arco-input::placeholder) {
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.5);
 }
 .login-form :deep(.arco-input-prefix) {
   color: rgba(212,175,55,0.4);

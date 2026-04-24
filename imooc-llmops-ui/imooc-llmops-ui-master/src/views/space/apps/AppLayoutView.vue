@@ -47,7 +47,7 @@ onMounted(async () => await loadApp(String(route.params?.app_id)))
             <div v-else class="flex items-center gap-2">
               <div class="flex items-center h-[18px] text-xs text-abyss-400">
                 <icon-user />
-                个人空间
+                科室会诊
               </div>
               <div class="flex items-center h-[18px] text-xs text-abyss-400">
                 <icon-schedule />
