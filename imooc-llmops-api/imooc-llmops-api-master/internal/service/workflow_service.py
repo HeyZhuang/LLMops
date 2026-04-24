@@ -14,7 +14,7 @@ from uuid import UUID
 
 from flask import request
 from injector import inject
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
 from internal.core.tools.builtin_tools.providers import BuiltinProviderManager
 from internal.core.workflow import Workflow as WorkflowTool
@@ -34,6 +34,7 @@ from internal.core.workflow.nodes import (
 from internal.entity.workflow_entity import WorkflowStatus, DEFAULT_WORKFLOW_CONFIG, WorkflowResultStatus
 from internal.exception import ValidateErrorException, NotFoundException, ForbiddenException, FailException
 from internal.lib.helper import convert_model_to_dict
+from internal.lib.shared_access import get_shared_medical_account_id, is_shared_medical_owner
 from internal.model import Account, Workflow, Dataset, ApiTool, WorkflowResult
 from internal.schema.workflow_schema import CreateWorkflowReq, GetWorkflowsWithPageReq
 from pkg.paginator import Paginator
@@ -86,7 +87,7 @@ class WorkflowService(BaseService):
     def delete_workflow(self, workflow_id: UUID, account: Account) -> Workflow:
         """根据传递的工作流id+账号信息，删除指定的工作流"""
         # 1.获取工作流基础信息并校验权限
-        workflow = self.get_workflow(workflow_id, account)
+        workflow = self._get_owned_workflow(workflow_id, account)
 
         # 2.删除工作流
         self.delete(workflow)
@@ -96,7 +97,7 @@ class WorkflowService(BaseService):
     def update_workflow(self, workflow_id: UUID, account: Account, **kwargs) -> Workflow:
         """根据传递的工作流id+请求更新工作流基础信息"""
         # 1.获取工作流基础信息并校验权限
-        workflow = self.get_workflow(workflow_id, account)
+        workflow = self._get_owned_workflow(workflow_id, account)
 
         # 2.根据传递的工具调用名字查询是否存在重名工作流
         check_workflow = self.db.session.query(Workflow).filter(
@@ -120,7 +121,8 @@ class WorkflowService(BaseService):
         paginator = Paginator(db=self.db, req=req)
 
         # 2.构建筛选器
-        filters = [Workflow.account_id == account.id]
+        shared_account_id = get_shared_medical_account_id()
+        filters = [or_(Workflow.account_id == account.id, Workflow.account_id == shared_account_id)] if shared_account_id else [Workflow.account_id == account.id]
         if req.search_word.data:
             filters.append(Workflow.name.ilike(f"%{req.search_word.data}%"))
         if req.status.data:
@@ -204,10 +206,14 @@ class WorkflowService(BaseService):
                     }
                 elif node.get("tool_type") == "api_tool":
                     # 9.查询数据库获取对应的工具记录，并检测是否存在
+                    shared_account_id = get_shared_medical_account_id()
                     tool_record = self.db.session.query(ApiTool).filter(
                         ApiTool.provider_id == node.get("provider_id"),
                         ApiTool.name == node.get("tool_id"),
-                        ApiTool.account_id == account.id,
+                        or_(
+                            ApiTool.account_id == account.id,
+                            ApiTool.account_id == shared_account_id,
+                        ) if shared_account_id else (ApiTool.account_id == account.id),
                     ).one_or_none()
                     if not tool_record:
                         continue

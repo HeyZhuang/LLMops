@@ -11,7 +11,7 @@ from typing import Any
 from uuid import UUID
 
 from injector import inject
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
 from internal.core.tools.api_tools.entities import OpenAPISchema
 from internal.core.tools.api_tools.providers import ApiProviderManager
@@ -19,6 +19,7 @@ from internal.exception import (
     ValidateErrorException,
     NotFoundException,
 )
+from internal.lib.shared_access import get_shared_medical_account_id, is_shared_medical_owner
 from internal.model import ApiToolProvider, ApiTool, Account
 from internal.schema.api_tool_schema import (
     CreateApiToolReq,
@@ -37,6 +38,10 @@ class ApiToolService(BaseService):
     db: SQLAlchemy
     api_provider_manager: ApiProviderManager
 
+    @staticmethod
+    def _can_access_provider(provider: ApiToolProvider, account: Account) -> bool:
+        return provider.account_id == account.id or is_shared_medical_owner(provider.account_id)
+
     def update_api_tool_provider(
             self,
             provider_id: UUID,
@@ -46,7 +51,7 @@ class ApiToolService(BaseService):
         """根据传递的provider_id+req更新对应的API工具提供者信息"""
         # 1.根据传递的provider_id查找API工具提供者信息并校验
         api_tool_provider = self.get(ApiToolProvider, provider_id)
-        if api_tool_provider is None or api_tool_provider.account_id != account.id:
+        if api_tool_provider is None or not self._can_access_provider(api_tool_provider, account):
             raise ValidateErrorException("该工具提供者不存在")
 
         # 2.校验openapi_schema数据
@@ -103,7 +108,8 @@ class ApiToolService(BaseService):
         paginator = Paginator(db=self.db, req=req)
 
         # 2.构建筛选器
-        filters = [ApiToolProvider.account_id == account.id]
+        shared_account_id = get_shared_medical_account_id()
+        filters = [or_(ApiToolProvider.account_id == account.id, ApiToolProvider.account_id == shared_account_id)] if shared_account_id else [ApiToolProvider.account_id == account.id]
         if req.search_word.data:
             filters.append(ApiToolProvider.name.ilike(f"%{req.search_word.data}%"))
 
@@ -121,7 +127,7 @@ class ApiToolService(BaseService):
             name=tool_name,
         ).one_or_none()
 
-        if api_tool is None or api_tool.account_id != account.id:
+        if api_tool is None or not (api_tool.account_id == account.id or is_shared_medical_owner(api_tool.account_id)):
             raise NotFoundException("该工具不存在")
 
         return api_tool

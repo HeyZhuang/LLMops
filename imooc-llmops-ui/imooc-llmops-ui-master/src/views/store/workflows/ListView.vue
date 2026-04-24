@@ -11,8 +11,11 @@ import moment from 'moment/moment'
 const category = ref('all')
 const search_word = ref('')
 const { categories, loadBuiltinWorkflowCategories } = useGetBuiltinWorkflowCategories()
-const { loading: getBuiltinWorkflowsLoading, workflows, loadBuiltinWorkflows } =
-  useGetBuiltinWorkflows()
+const {
+  loading: getBuiltinWorkflowsLoading,
+  workflows,
+  loadBuiltinWorkflows,
+} = useGetBuiltinWorkflows()
 const { handleAddBuiltinWorkflowToSpace } = useAddBuiltinWorkflowToSpace()
 const filterWorkflows = computed(() => {
   return workflows.value.filter((item) => {
@@ -39,10 +42,10 @@ onMounted(() => {
           <a-avatar :size="32" class="bg-blue-700">
             <icon-mind-mapping :size="18" />
           </a-avatar>
-          <div class="text-lg font-medium text-gray-900">工作流广场</div>
+          <div class="text-lg font-medium text-gray-900">编排工坊</div>
         </div>
       </div>
-      <!-- 分类+搜索框 -->
+      <!-- 会诊编排分类+搜索框 -->
       <div class="flex items-center justify-between mb-6">
         <!-- 左侧分类 -->
         <div class="flex items-center gap-2">
@@ -66,7 +69,7 @@ onMounted(() => {
         <!-- 右侧搜索 -->
         <a-input-search
           v-model="search_word"
-          placeholder="请输入工作流名称"
+          placeholder="搜索编排模板"
           class="w-[240px] bg-white rounded-lg border-gray-300"
         />
       </div>
@@ -98,11 +101,9 @@ onMounted(() => {
                   </a-button>
                   <template #content>
                     <a-doption
-                      @click="
-                        async () => await handleAddBuiltinWorkflowToSpace(workflow.id)
-                      "
+                      @click="async () => await handleAddBuiltinWorkflowToSpace(workflow.id)"
                     >
-                      添加到工作区
+                      加入会诊工作区
                     </a-doption>
                   </template>
                 </a-dropdown>
@@ -127,7 +128,7 @@ onMounted(() => {
         <!-- 没数据的UI状态 -->
         <a-col v-if="filterWorkflows.length === 0" :span="24">
           <a-empty
-            description="没有可用的内置工作流模板"
+            description="暂无可用的编排模板"
             class="h-[400px] flex flex-col items-center justify-center"
           />
         </a-col>

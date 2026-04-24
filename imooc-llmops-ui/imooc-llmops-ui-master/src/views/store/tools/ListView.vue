@@ -38,14 +38,14 @@ onMounted(() => {
           <a-avatar :size="32" class="bg-blue-700">
             <icon-common :size="18" />
           </a-avatar>
-          <div class="text-lg font-medium text-gray-900">插件广场</div>
+          <div class="text-lg font-medium text-gray-900">专科工具箱</div>
         </div>
         <!-- 创建按钮 -->
         <router-link :to="{ name: 'space-tools-list', query: { create_type: 'tool' } }">
-          <a-button type="primary" class="rounded-lg">创建自定义插件</a-button>
+          <a-button type="primary" class="rounded-lg">创建专科插件</a-button>
         </router-link>
       </div>
-      <!-- 插件分类+搜索框 -->
+      <!-- 专科工具分类+搜索框 -->
       <div class="flex items-center justify-between mb-6">
         <!-- 左侧分类 -->
         <div class="flex items-center gap-2">
@@ -68,7 +68,7 @@ onMounted(() => {
         <!-- 右侧搜索 -->
         <a-input-search
           v-model="search_word"
-          placeholder="请输入插件名称"
+          placeholder="搜索专科插件"
           class="w-[240px] bg-white rounded-lg border-gray-300"
         />
       </div>
@@ -94,7 +94,7 @@ onMounted(() => {
               <div class="flex flex-col">
                 <div class="text-base text-gray-900 font-bold">{{ builtinTool.label }}</div>
                 <div class="text-xs text-gray-500 line-clamp-1">
-                  提供商 {{ builtinTool.name }} · {{ builtinTool.tools.length }} 插件
+                  来源 {{ builtinTool.name }} · {{ builtinTool.tools.length }} 个插件
                 </div>
               </div>
             </div>
@@ -108,7 +108,7 @@ onMounted(() => {
                 <icon-user />
               </a-avatar>
               <div class="text-xs text-gray-400">
-                {{ builtinTool.author }}  · 发布时间
+                {{ builtinTool.author }} · 发布时间
                 {{ moment(builtinTool.created_at * 1000).format('MM-DD HH:mm') }}
               </div>
             </div>
@@ -117,7 +117,7 @@ onMounted(() => {
         <!-- 没数据的UI状态 -->
         <a-col v-if="filterBuiltinTools.length === 0" :span="24">
           <a-empty
-            description="没有可用的内置插件"
+            description="暂无可用的专科插件"
             class="h-[400px] flex flex-col items-center justify-center"
           />
         </a-col>
@@ -127,7 +127,7 @@ onMounted(() => {
         :visible="showIdx != -1"
         :width="350"
         :footer="false"
-        title="工具详情"
+        title="插件详情"
         :drawer-style="{ background: '#F9FAFB' }"
         @cancel="showIdx = -1"
       >
@@ -152,8 +152,8 @@ onMounted(() => {
                 {{ filterBuiltinTools[showIdx].label }}
               </div>
               <div class="text-xs text-gray-500 line-clamp-1">
-                提供商 {{ filterBuiltinTools[showIdx].name }} ·
-                {{ filterBuiltinTools[showIdx].tools.length }} 插件
+                来源 {{ filterBuiltinTools[showIdx].name }} ·
+                {{ filterBuiltinTools[showIdx].tools.length }} 个插件
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ onMounted(() => {
           <!-- 提供者工具 -->
           <div class="flex flex-col gap-2">
             <div class="text-xs text-gray-500">
-              包含 {{ filterBuiltinTools[showIdx].tools.length }} 个工具
+              包含 {{ filterBuiltinTools[showIdx].tools.length }} 个能力组件
             </div>
             <!-- 工具列表 -->
             <a-card

@@ -33,4 +33,5 @@ DEFAULT_CONFIG = {
 
     # 辅助Agent智能体应用id
     "ASSISTANT_AGENT_ID": "6774fcef-b594-8008-b30c-a05b8190afe6",
+    "SHARED_MEDICAL_ACCOUNT_ID": "",
 }

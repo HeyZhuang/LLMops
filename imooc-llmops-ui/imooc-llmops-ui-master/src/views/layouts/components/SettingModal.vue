@@ -124,7 +124,7 @@ watch(
               :limit="1"
               image-preview
               :custom-request="
-                (option) => {
+                (option: any) => {
                   const uploadTask = async () => {
                     // 1.提取数据并发起请求获取响应内容
                     const { fileItem, onSuccess } = option
@@ -193,7 +193,12 @@ watch(
             </div>
             <div v-else class="flex items-center gap-1">
               <div class="text-abyss-700">{{ accountStore.account.name }}</div>
-              <a-button size="mini" type="text" class="!text-gold-400 hover:!text-gold-600" @click="updateName = true">
+              <a-button
+                size="mini"
+                type="text"
+                class="!text-gold-400 hover:!text-gold-600"
+                @click="updateName = true"
+              >
                 <template #icon>
                   <icon-edit />
                 </template>
@@ -270,22 +275,22 @@ watch(
 <style scoped>
 /* 上传组件主题适配 */
 .setting-form :deep(.arco-upload-list-picture) {
-  border: 2px solid rgba(212,175,55,0.2) !important;
+  border: 2px solid rgba(212, 175, 55, 0.2) !important;
   border-radius: 12px !important;
   overflow: hidden;
 }
 .setting-form :deep(.arco-upload-picture-card) {
-  border: 2px dashed rgba(212,175,55,0.2) !important;
+  border: 2px dashed rgba(212, 175, 55, 0.2) !important;
   border-radius: 12px !important;
-  background: rgba(212,175,55,0.03) !important;
+  background: rgba(212, 175, 55, 0.03) !important;
   transition: all 0.3s ease;
 }
 .setting-form :deep(.arco-upload-picture-card:hover) {
-  border-color: rgba(212,175,55,0.4) !important;
-  background: rgba(212,175,55,0.06) !important;
+  border-color: rgba(212, 175, 55, 0.4) !important;
+  background: rgba(212, 175, 55, 0.06) !important;
 }
 .setting-form :deep(.arco-upload-picture-card .arco-icon) {
-  color: #D4AF37;
+  color: #d4af37;
 }
 /* 表单标签 */
 .setting-form :deep(.arco-form-item-label) {

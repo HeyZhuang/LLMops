@@ -41,6 +41,8 @@ from .feedback_service import FeedbackService
 from .app_export_service import AppExportService
 from .prompt_template_service import PromptTemplateService
 from .skill_service import SkillService
+from .consult_center_service import ConsultCenterService
+from .imaging_service import ImagingService
 
 __all__ = [
     "BaseService",
@@ -79,4 +81,6 @@ __all__ = [
     "AppExportService",
     "PromptTemplateService",
     "SkillService",
+    "ConsultCenterService",
+    "ImagingService",
 ]

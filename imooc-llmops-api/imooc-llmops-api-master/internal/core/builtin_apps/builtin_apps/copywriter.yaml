@@ -1,7 +1,7 @@
 id: "c3d4e5f6-a7b8-9012-cdef-123456789003"
 category: "writing"
 name: "文案写手"
-icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/153da84b-5a0c-4665-9745-9022eb846598.jpg"
+icon: ""
 description: "专业的文案写手，擅长撰写各类营销文案、品牌故事、社交媒体内容和广告创意文案。"
 model_config:
   provider: "tongyi"

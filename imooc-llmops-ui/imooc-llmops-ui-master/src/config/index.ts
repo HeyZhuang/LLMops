@@ -1,5 +1,5 @@
-// api请求接口前缀
-export const apiPrefix: string = import.meta.env.VITE_API_PREFIX
+// api请求接口前缀，开发环境默认直连本地 Flask
+export const apiPrefix: string = import.meta.env.VITE_API_PREFIX || 'http://localhost:5000'
 
 // 业务状态码
 export const httpCode = {

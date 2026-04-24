@@ -54,3 +54,4 @@ class Config:
 
         # 辅助Agent应用id标识
         self.ASSISTANT_AGENT_ID = _get_env("ASSISTANT_AGENT_ID")
+        self.SHARED_MEDICAL_ACCOUNT_ID = _get_env("SHARED_MEDICAL_ACCOUNT_ID")

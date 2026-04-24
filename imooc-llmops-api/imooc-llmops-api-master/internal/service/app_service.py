@@ -40,6 +40,7 @@ from internal.entity.conversation_entity import InvokeFrom, MessageStatus
 from internal.entity.dataset_entity import RetrievalSource
 from internal.exception import NotFoundException, ForbiddenException, ValidateErrorException, FailException
 from internal.lib.helper import remove_fields, get_value_type, generate_random_string
+from internal.lib.shared_access import get_shared_medical_account_id, is_shared_medical_owner
 from internal.model import (
     App,
     Account,
@@ -84,6 +85,16 @@ class AppService(BaseService):
     api_provider_manager: ApiProviderManager
     builtin_provider_manager: BuiltinProviderManager
     language_model_manager: LanguageModelManager
+
+    @staticmethod
+    def _can_access_app(app: App, account: Account) -> bool:
+        return app.account_id == account.id or is_shared_medical_owner(app.account_id)
+
+    def _get_owned_app(self, app_id: UUID, account: Account) -> App:
+        app = self._get_owned_app(app_id, account)
+        if not self._can_access_app(app, account):
+            raise ForbiddenException("共享应用为只读，如需修改请先复制到自己的空间")
+        return app
 
     def auto_create_app(self, name: str, description: str, account_id: UUID) -> None:
         """根据传递的应用名称、描述、账号id利用AI创建一个Agent智能体"""
@@ -201,7 +212,7 @@ class AppService(BaseService):
 
     def delete_app(self, app_id: UUID, account: Account) -> App:
         """根据传递的应用id+账号，删除指定的应用信息，目前仅删除应用基础信息即可"""
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
         self.delete(app)
         return app
 
@@ -260,7 +271,8 @@ class AppService(BaseService):
         paginator = Paginator(db=self.db, req=req)
 
         # 2.构建筛选条件
-        filters = [App.account_id == account.id]
+        shared_account_id = get_shared_medical_account_id()
+        filters = [or_(App.account_id == account.id, App.account_id == shared_account_id)] if shared_account_id else [App.account_id == account.id]
         if req.search_word.data:
             filters.append(App.name.ilike(f"%{req.search_word.data}%"))
 
@@ -374,7 +386,7 @@ class AppService(BaseService):
     def cancel_publish_app_config(self, app_id: UUID, account: Account) -> App:
         """根据传递的应用id+账号，取消发布指定的应用配置"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.检测下当前应用的状态是否为已发布
         if app.status != AppStatus.PUBLISHED:
@@ -453,7 +465,7 @@ class AppService(BaseService):
     def get_debug_conversation_summary(self, app_id: UUID, account: Account) -> str:
         """根据传递的应用id+账号获取指定应用的调试会话长期记忆"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.获取应用的草稿配置，并校验长期记忆是否启用
         draft_app_config = self.get_draft_app_config(app_id, account)
@@ -465,7 +477,7 @@ class AppService(BaseService):
     def update_debug_conversation_summary(self, app_id: UUID, summary: str, account: Account) -> Conversation:
         """根据传递的应用id+总结更新指定应用的调试长期记忆"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.获取应用的草稿配置，并校验长期记忆是否启用
         draft_app_config = self.get_draft_app_config(app_id, account)
@@ -481,7 +493,7 @@ class AppService(BaseService):
     def delete_debug_conversation(self, app_id: UUID, account: Account) -> App:
         """根据传递的应用id，删除指定的应用调试会话"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.判断是否存在debug_conversation_id这个数据，如果不存在表示没有会话，无需执行任何操作
         if not app.debug_conversation_id:
@@ -495,7 +507,7 @@ class AppService(BaseService):
     def debug_chat(self, app_id: UUID, query: str, account: Account) -> Generator:
         """根据传递的应用id+提问query向特定的应用发起会话调试"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.获取应用的最新草稿配置信息
         draft_app_config = self.get_draft_app_config(app_id, account)
@@ -682,7 +694,7 @@ class AppService(BaseService):
     def stop_debug_chat(self, app_id: UUID, task_id: UUID, account: Account) -> None:
         """根据传递的应用id+任务id+账号，停止某个应用的调试会话，中断流式事件"""
         # 1.获取应用信息并校验权限
-        self.get_app(app_id, account)
+        self._get_owned_app(app_id, account)
 
         # 2.调用智能体队列管理器停止特定任务
         AgentQueueManager.set_stop_flag(task_id, InvokeFrom.DEBUGGER, account.id)
@@ -695,7 +707,7 @@ class AppService(BaseService):
     ) -> tuple[list[Message], Paginator]:
         """根据传递的应用id+请求数据，获取调试会话消息列表分页数据"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.获取应用的调试会话
         debug_conversation = app.debug_conversation
@@ -723,7 +735,7 @@ class AppService(BaseService):
     def get_published_config(self, app_id: UUID, account: Account) -> dict[str, Any]:
         """根据传递的应用id+账号，获取应用的发布配置"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.构建发布配置并返回
         return {
@@ -736,7 +748,7 @@ class AppService(BaseService):
     def regenerate_web_app_token(self, app_id: UUID, account: Account) -> str:
         """根据传递的应用id+账号，重新生成WebApp凭证标识"""
         # 1.获取应用信息并校验权限
-        app = self.get_app(app_id, account)
+        app = self._get_owned_app(app_id, account)
 
         # 2.判断应用是否已发布
         if app.status != AppStatus.PUBLISHED:
@@ -907,10 +919,14 @@ class AppService(BaseService):
                     if not builtin_tool:
                         continue
                 else:
+                    shared_account_id = get_shared_medical_account_id()
                     api_tool = self.db.session.query(ApiTool).filter(
                         ApiTool.provider_id == tool["provider_id"],
                         ApiTool.name == tool["tool_id"],
-                        ApiTool.account_id == account.id,
+                        or_(
+                            ApiTool.account_id == account.id,
+                            ApiTool.account_id == shared_account_id,
+                        ) if shared_account_id else (ApiTool.account_id == account.id),
                     ).one_or_none()
                     if not api_tool:
                         continue
@@ -945,9 +961,13 @@ class AppService(BaseService):
             if len(set(workflows)) != len(workflows):
                 raise ValidateErrorException("绑定工作流存在重复")
             # 7.5 校验关联工作流的权限，剔除不属于当前账号，亦或者未发布的工作流
+            shared_account_id = get_shared_medical_account_id()
             workflow_records = self.db.session.query(Workflow).filter(
                 Workflow.id.in_(workflows),
-                Workflow.account_id == account.id,
+                or_(
+                    Workflow.account_id == account.id,
+                    Workflow.account_id == shared_account_id,
+                ) if shared_account_id else (Workflow.account_id == account.id),
                 Workflow.status == WorkflowStatus.PUBLISHED,
             ).all()
             workflow_sets = set([str(workflow_record.id) for workflow_record in workflow_records])

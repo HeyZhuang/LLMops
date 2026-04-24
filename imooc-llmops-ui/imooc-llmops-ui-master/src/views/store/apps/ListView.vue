@@ -40,10 +40,10 @@ onMounted(() => {
           <a-avatar :size="32" class="bg-blue-700">
             <icon-common :size="18" />
           </a-avatar>
-          <div class="text-lg font-medium text-gray-900">应用广场</div>
+          <div class="text-lg font-medium text-gray-900">会诊应用广场</div>
         </div>
       </div>
-      <!-- 应用分类+搜索框 -->
+      <!-- 会诊应用分类+搜索框 -->
       <div class="flex items-center justify-between mb-6">
         <!-- 左侧分类 -->
         <div class="flex items-center gap-2">
@@ -67,7 +67,7 @@ onMounted(() => {
         <!-- 右侧搜索 -->
         <a-input-search
           v-model="search_word"
-          placeholder="请输入应用名称"
+          placeholder="搜索会诊应用"
           class="w-[240px] bg-white rounded-lg border-gray-300"
         />
       </div>
@@ -113,7 +113,7 @@ onMounted(() => {
                 <icon-user />
               </a-avatar>
               <div class="text-xs text-gray-400">
-                {{ app.author }}  · 发布时间
+                {{ app.author }} · 发布时间
                 {{ moment(app.created_at * 1000).format('MM-DD HH:mm') }}
               </div>
             </div>
@@ -122,7 +122,7 @@ onMounted(() => {
         <!-- 没数据的UI状态 -->
         <a-col v-if="filterApps.length === 0" :span="24">
           <a-empty
-            description="没有可用的内置Agent智能体"
+            description="暂无可用的会诊应用"
             class="h-[400px] flex flex-col items-center justify-center"
           />
         </a-col>

@@ -36,6 +36,8 @@ from internal.handler import (
     AppExportHandler,
     PromptTemplateHandler,
     SkillHandler,
+    ConsultCenterHandler,
+    ImagingHandler,
 )
 
 
@@ -68,6 +70,8 @@ class Router:
     app_export_handler: AppExportHandler
     prompt_template_handler: PromptTemplateHandler
     skill_handler: SkillHandler
+    consult_center_handler: ConsultCenterHandler
+    imaging_handler: ImagingHandler
 
     def register_router(self, app: Flask):
         """注册路由"""
@@ -77,6 +81,44 @@ class Router:
 
         # 2.将url与对应的控制器方法做绑定
         bp.add_url_rule("/ping", view_func=self.app_handler.ping)
+        bp.add_url_rule("/consult-center/overview", view_func=self.consult_center_handler.get_overview)
+        bp.add_url_rule(
+            "/imaging/overview",
+            endpoint="imaging_get_overview",
+            view_func=self.imaging_handler.get_overview,
+        )
+        bp.add_url_rule(
+            "/imaging/workflow-templates",
+            endpoint="imaging_get_workflow_templates",
+            view_func=self.imaging_handler.get_workflow_templates,
+        )
+        bp.add_url_rule(
+            "/imaging/mvp-tasks",
+            endpoint="imaging_get_mvp_tasks",
+            view_func=self.imaging_handler.get_mvp_tasks,
+        )
+        bp.add_url_rule(
+            "/imaging/studies",
+            endpoint="imaging_get_studies",
+            view_func=self.imaging_handler.get_studies,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>",
+            endpoint="imaging_get_study_detail",
+            view_func=self.imaging_handler.get_study_detail,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/report-draft",
+            methods=["POST"],
+            endpoint="imaging_save_report_draft",
+            view_func=self.imaging_handler.save_report_draft,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/review",
+            methods=["POST"],
+            endpoint="imaging_submit_review",
+            view_func=self.imaging_handler.submit_review,
+        )
         bp.add_url_rule("/apps", view_func=self.app_handler.get_apps_with_page)
         bp.add_url_rule("/apps", methods=["POST"], view_func=self.app_handler.create_app)
         bp.add_url_rule("/apps/<uuid:app_id>", view_func=self.app_handler.get_app)

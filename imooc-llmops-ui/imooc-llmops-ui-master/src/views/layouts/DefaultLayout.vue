@@ -8,7 +8,6 @@ import { useCredentialStore } from '@/stores/credential'
 import { useAccountStore } from '@/stores/account'
 import SettingModal from '@/views/layouts/components/SettingModal.vue'
 
-// 1.定义页面所需数据
 const settingModalVisible = ref(false)
 const router = useRouter()
 const credentialStore = useCredentialStore()
@@ -16,20 +15,13 @@ const accountStore = useAccountStore()
 const { handleLogout: handleLogoutHook } = useLogout()
 const { current_user, loadCurrentUser } = useGetCurrentUser()
 
-// 2.退出登录按钮
 const handleLogout = async () => {
-  // 2.1 发起请求退出登录
   await handleLogoutHook()
-
-  // 2.2 清空授权凭证+账号信息
   credentialStore.clear()
   accountStore.clear()
-
-  // 2.3 跳转到授权认证页面
   await router.replace({ name: 'auth-login' })
 }
 
-// 3.页面DOM加载完成时获取当前登录账号信息
 onMounted(async () => {
   await loadCurrentUser()
   accountStore.update(current_user.value)
@@ -37,44 +29,44 @@ onMounted(async () => {
 </script>
 
 <template>
-  <a-layout has-sider class="h-full linen-bg">
-    <!-- 侧边栏 -->
-    <a-layout-sider :width="240" class="min-h-screen p-2 !bg-transparent">
-      <div class="glass metal-border shimmer h-full rounded-xl px-3 py-4 flex flex-col justify-between shadow-glass">
-        <!-- 上半部分 -->
+  <a-layout has-sider class="h-screen overflow-hidden linen-bg">
+    <a-layout-sider :width="240" class="h-screen shrink-0 p-2 !bg-transparent">
+      <div
+        class="glass metal-border shimmer h-full rounded-xl px-3 py-4 flex flex-col justify-between shadow-glass"
+      >
         <div>
-          <!-- 顶部Logo与系统名称 -->
-          <router-link to="/home" class="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity decoration-transparent">
+          <router-link
+            to="/home"
+            class="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity decoration-transparent"
+          >
             <img
               src="@/assets/images/logo2_transparent.png"
               alt="医脉天枢"
               class="h-10 w-auto object-contain flex-shrink-0"
             />
-            <span class="text-xl font-bold bg-gradient-to-r from-gold-500 to-amber-600 bg-clip-text text-transparent tracking-widest whitespace-nowrap">医脉天枢</span>
+            <span
+              class="text-xl font-bold bg-gradient-to-r from-gold-500 to-amber-600 bg-clip-text text-transparent tracking-widest whitespace-nowrap"
+            >
+              医脉天枢
+            </span>
           </router-link>
-          <!-- 金色分割线 -->
           <div class="divider-gold mb-4"></div>
-          <!-- 创建AI应用按钮 -->
           <router-link :to="{ name: 'space-apps-list', query: { create_type: 'app' } }">
             <a-button type="primary" long class="rounded-lg mb-4 !h-9">
               <template #icon>
                 <icon-plus />
               </template>
-              创建医脉天枢:AI医疗应用
+              新建会诊应用
             </a-button>
           </router-link>
-          <!-- 侧边栏导航 -->
           <layout-sidebar />
         </div>
-        <!-- 账号设置 -->
         <div>
-          <!-- 金色分割线 -->
           <div class="divider-gold mb-3"></div>
           <a-dropdown position="tl">
             <div
               class="flex items-center p-2 gap-2 transition-all cursor-pointer rounded-lg hover:bg-gold-50"
             >
-              <!-- 头像 -->
               <a-avatar
                 :size="32"
                 class="text-sm !bg-abyss-800 !text-gold-400"
@@ -82,9 +74,10 @@ onMounted(async () => {
               >
                 {{ accountStore.account.name[0] }}
               </a-avatar>
-              <!-- 个人信息 -->
               <div class="flex flex-col">
-                <div class="text-sm text-abyss-800 font-medium">{{ accountStore.account.name }}</div>
+                <div class="text-sm text-abyss-800 font-medium">
+                  {{ accountStore.account.name }}
+                </div>
                 <div class="text-xs text-abyss-400">{{ accountStore.account.email }}</div>
               </div>
             </div>
@@ -93,7 +86,7 @@ onMounted(async () => {
                 <template #icon>
                   <icon-settings />
                 </template>
-                账号设置
+                账户设置
               </a-doption>
               <a-doption @click="handleLogout">
                 <template #icon>
@@ -106,11 +99,9 @@ onMounted(async () => {
         </div>
       </div>
     </a-layout-sider>
-    <!-- 右侧内容 -->
-    <a-layout-content class="!bg-transparent">
+    <a-layout-content class="h-screen min-w-0 overflow-y-auto overflow-x-hidden !bg-transparent">
       <router-view />
     </a-layout-content>
-    <!-- 设置模态窗 -->
     <setting-modal v-model:visible="settingModalVisible" />
   </a-layout>
 </template>

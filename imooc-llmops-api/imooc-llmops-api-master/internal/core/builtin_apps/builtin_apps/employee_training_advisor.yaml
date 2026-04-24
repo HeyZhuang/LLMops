@@ -1,7 +1,7 @@
 id: "b2c3d4e5-f6a7-8901-bcde-f12345678902"
 category: "hr"
 name: "员工培训顾问"
-icon: "https://imooc-llmops-1304251364.cos.ap-guangzhou.myqcloud.com/2025/12/06/5af57d6d-d71b-4396-9c59-89ae55145b94.png"
+icon: ""
 description: "专业的员工培训顾问，帮助企业制定培训计划、设计培训课程、评估培训效果，提升团队整体能力。"
 model_config:
   provider: "tongyi"

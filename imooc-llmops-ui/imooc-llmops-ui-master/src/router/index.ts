@@ -53,7 +53,22 @@ const router = createRouter({
               name: 'space-skills-list',
               component: () => import('@/views/space/skills/ListView.vue'),
             },
+            {
+              path: 'imaging',
+              name: 'space-imaging-planning',
+              component: () => import('@/views/space/imaging/PlanningView.vue'),
+            },
+            {
+              path: 'imaging/studies',
+              name: 'space-imaging-studies',
+              component: () => import('@/views/space/imaging/StudiesView.vue'),
+            },
           ],
+        },
+        {
+          path: 'space/imaging/studies/:study_id',
+          name: 'space-imaging-study-detail',
+          component: () => import('@/views/space/imaging/StudyDetailView.vue'),
         },
         {
           path: 'space/datasets/:dataset_id/documents',

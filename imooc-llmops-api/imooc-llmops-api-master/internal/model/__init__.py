@@ -17,6 +17,15 @@ from .workflow import Workflow, WorkflowResult
 from .message_feedback import MessageFeedback
 from .prompt_template import PromptTemplate
 from .skill import Skill
+from .imaging import (
+    ImagingStudy,
+    ImagingSeries,
+    ImagingInstance,
+    ImagingAiResult,
+    ImagingReport,
+    ImagingReview,
+    ImagingAuditLog,
+)
 
 __all__ = [
     "App", "AppDatasetJoin", "AppConfig", "AppConfigVersion",
@@ -30,4 +39,11 @@ __all__ = [
     "MessageFeedback",
     "PromptTemplate",
     "Skill",
+    "ImagingStudy",
+    "ImagingSeries",
+    "ImagingInstance",
+    "ImagingAiResult",
+    "ImagingReport",
+    "ImagingReview",
+    "ImagingAuditLog",
 ]

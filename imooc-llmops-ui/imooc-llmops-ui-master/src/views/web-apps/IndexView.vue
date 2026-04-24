@@ -145,7 +145,7 @@ const addConversation = () => {
   if (!newConversation.value) {
     newConversation.value = {
       id: '',
-      name: 'New Conversation',
+      name: '新建会诊',
       summary: '',
       created_at: 0,
     }
@@ -264,7 +264,7 @@ const handleSubmit = async () => {
         messages.value[0].answer = data?.observation
       } else if (event === QueueEvent.timeout) {
         // 5.16 事件为timeout，则人工提示超时信息
-        messages.value[0].answer = '当前Agent执行已超时，无法得到答案，请重试'
+        messages.value[0].answer = '当前智能体执行已超时，无法得到答案，请重试'
       } else {
         // 11.11 处理其他类型的事件，直接填充覆盖数据
         position += 1
@@ -294,7 +294,7 @@ const handleSubmit = async () => {
       // 11.14 将newConversation填充到会话列表中
       unpinned_conversations.value.unshift({
         id: messages.value[0].conversation_id,
-        name: 'New Conversation',
+        name: '新建会诊',
         summary: '',
         created_at: messages.value[0].created_at,
       })
@@ -594,7 +594,7 @@ onMounted(async () => {
               type="text"
               class="flex-1 outline-0"
               @keyup.enter="handleSubmit"
-              :placeholder="`给 &quot;${web_app?.name ?? '&quot;聊天机器人&quot;'}&quot; 发送消息`"
+              :placeholder="`给 &quot;${web_app?.name ?? '&quot;会诊助手&quot;'}&quot; 发送消息`"
             />
             <a-button
               :loading="webAppChatLoading"
