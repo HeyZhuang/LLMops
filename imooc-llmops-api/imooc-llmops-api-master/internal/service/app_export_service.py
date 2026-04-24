@@ -14,7 +14,7 @@ from injector import inject
 
 from internal.entity.app_entity import AppStatus, AppConfigType, DEFAULT_APP_CONFIG
 from internal.exception import NotFoundException, ForbiddenException, ValidateErrorException
-from internal.model import App, Account, AppConfigVersion, Dataset, ApiTool
+from internal.model import App, Account, AppConfigVersion, Dataset, ApiTool, Skill
 from pkg.sqlalchemy import SQLAlchemy
 from .base_service import BaseService
 
@@ -47,6 +47,7 @@ class AppExportService(BaseService):
             "config": {
                 "model_config": draft_config.model_config,
                 "preset_prompt": draft_config.preset_prompt,
+                "skills": draft_config.skills,
                 "dialog_round": draft_config.dialog_round,
                 "tools": draft_config.tools,
                 "workflows": draft_config.workflows,
@@ -107,6 +108,17 @@ class AppExportService(BaseService):
             else:
                 warnings.append(f"知识库 {dataset_id} 不存在或无权访问，已跳过")
 
+        # 4.??????
+        valid_skills = []
+        for skill_id in config.get("skills", []):
+            skill = self.db.session.query(Skill).filter(
+                Skill.id == skill_id,
+            ).first()
+            if skill and (skill.account_id == account.id or skill.is_public):
+                valid_skills.append(skill_id)
+            else:
+                warnings.append(f"?? {skill_id} ????????????")
+
         # 4.创建新应用
         with self.db.auto_commit():
             app = App(
@@ -126,6 +138,7 @@ class AppExportService(BaseService):
                 config_type=AppConfigType.DRAFT,
                 model_config=config.get("model_config", {}),
                 preset_prompt=config.get("preset_prompt", ""),
+                skills=valid_skills,
                 dialog_round=config.get("dialog_round", 5),
                 tools=valid_tools,
                 workflows=config.get("workflows", []),

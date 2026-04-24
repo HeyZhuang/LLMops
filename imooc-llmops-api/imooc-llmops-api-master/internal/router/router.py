@@ -35,6 +35,7 @@ from internal.handler import (
     FeedbackHandler,
     AppExportHandler,
     PromptTemplateHandler,
+    SkillHandler,
 )
 
 
@@ -66,6 +67,7 @@ class Router:
     feedback_handler: FeedbackHandler
     app_export_handler: AppExportHandler
     prompt_template_handler: PromptTemplateHandler
+    skill_handler: SkillHandler
 
     def register_router(self, app: Flask):
         """注册路由"""
@@ -533,5 +535,19 @@ class Router:
         )
 
         # 21.在应用上注册蓝图
+        # 20.5.技能库模块
+        bp.add_url_rule("/skills", view_func=self.skill_handler.get_skills_with_page)
+        bp.add_url_rule("/skills", methods=["POST"], view_func=self.skill_handler.create_skill)
+        bp.add_url_rule("/skills/<uuid:skill_id>", view_func=self.skill_handler.get_skill)
+        bp.add_url_rule(
+            "/skills/<uuid:skill_id>",
+            methods=["POST"],
+            view_func=self.skill_handler.update_skill,
+        )
+        bp.add_url_rule(
+            "/skills/<uuid:skill_id>/delete",
+            methods=["POST"],
+            view_func=self.skill_handler.delete_skill,
+        )
         app.register_blueprint(bp)
         app.register_blueprint(openapi_bp)

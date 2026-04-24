@@ -40,6 +40,7 @@ from .workflow_service import WorkflowService
 from .feedback_service import FeedbackService
 from .app_export_service import AppExportService
 from .prompt_template_service import PromptTemplateService
+from .skill_service import SkillService
 
 __all__ = [
     "BaseService",
@@ -77,4 +78,5 @@ __all__ = [
     "FeedbackService",
     "AppExportService",
     "PromptTemplateService",
+    "SkillService",
 ]

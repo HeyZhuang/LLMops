@@ -48,6 +48,11 @@ const router = createRouter({
               name: 'space-prompt-templates-list',
               component: () => import('@/views/space/prompt-templates/ListView.vue'),
             },
+            {
+              path: 'skills',
+              name: 'space-skills-list',
+              component: () => import('@/views/space/skills/ListView.vue'),
+            },
           ],
         },
         {

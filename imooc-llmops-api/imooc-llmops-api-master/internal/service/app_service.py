@@ -23,7 +23,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableParallel
 from langchain_community.chat_models.tongyi import ChatTongyi
 from redis import Redis
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_
 from werkzeug.datastructures import FileStorage
 
 from internal.core.agent.agents import FunctionCallAgent, AgentQueueManager, ReACTAgent, SupervisorAgent
@@ -46,6 +46,7 @@ from internal.model import (
     AppConfigVersion,
     ApiTool,
     Dataset,
+    Skill,
     AppConfig,
     AppDatasetJoin,
     Conversation,
@@ -312,6 +313,7 @@ class AppService(BaseService):
             model_config=draft_app_config["model_config"],
             dialog_round=draft_app_config["dialog_round"],
             preset_prompt=draft_app_config["preset_prompt"],
+            skills=draft_app_config.get("skills", DEFAULT_APP_CONFIG["skills"]),
             tools=[
                 {
                     "type": tool["type"],
@@ -587,7 +589,7 @@ class AppService(BaseService):
                 agent_config=SupervisorAgentConfig(
                     user_id=account.id,
                     invoke_from=InvokeFrom.DEBUGGER,
-                    preset_prompt=draft_app_config["preset_prompt"],
+                    preset_prompt=self.app_config_service._compile_preset_prompt(draft_app_config["preset_prompt"], draft_app_config.get("skills", [])),
                     enable_long_term_memory=draft_app_config["long_term_memory"]["enable"],
                     tools=tools,
                     review_config=draft_app_config["review_config"],
@@ -603,7 +605,7 @@ class AppService(BaseService):
                 agent_config=AgentConfig(
                     user_id=account.id,
                     invoke_from=InvokeFrom.DEBUGGER,
-                    preset_prompt=draft_app_config["preset_prompt"],
+                    preset_prompt=self.app_config_service._compile_preset_prompt(draft_app_config["preset_prompt"], draft_app_config.get("skills", [])),
                     enable_long_term_memory=draft_app_config["long_term_memory"]["enable"],
                     tools=tools,
                     review_config=draft_app_config["review_config"],
@@ -751,7 +753,7 @@ class AppService(BaseService):
         # 1.校验上传的草稿配置中对应的字段，至少拥有一个可以更新的配置
         acceptable_fields = [
             "model_config", "dialog_round", "preset_prompt",
-            "tools", "workflows", "datasets", "retrieval_config",
+            "skills", "tools", "workflows", "datasets", "retrieval_config",
             "long_term_memory", "opening_statement", "opening_questions",
             "speech_to_text", "text_to_speech", "suggested_after_answer", "review_config",
             "multi_agent_config",
@@ -842,7 +844,31 @@ class AppService(BaseService):
             if not isinstance(preset_prompt, str) or len(preset_prompt) > 2000:
                 raise ValidateErrorException("人设与回复逻辑必须是字符串，长度在0-2000个字符")
 
-        # 6.校验tools工具
+        # 6.??skills????
+        if "skills" in draft_app_config:
+            skills = draft_app_config["skills"]
+            if not isinstance(skills, list):
+                raise ValidateErrorException("skills must be a list")
+            if len(skills) > 10:
+                raise ValidateErrorException("An app can bind at most 10 skills")
+            for skill_id in skills:
+                try:
+                    UUID(skill_id)
+                except Exception:
+                    raise ValidateErrorException("Each skill id must be a UUID")
+            if len(set(skills)) != len(skills):
+                raise ValidateErrorException("Duplicate skills are not allowed")
+
+            skill_records = self.db.session.query(Skill).filter(
+                Skill.id.in_(skills),
+                or_(
+                    Skill.account_id == account.id,
+                    Skill.is_public == True,
+                ),
+            ).all()
+            skill_sets = set([str(skill_record.id) for skill_record in skill_records])
+            draft_app_config["skills"] = [skill_id for skill_id in skills if skill_id in skill_sets]
+
         if "tools" in draft_app_config:
             tools = draft_app_config["tools"]
             validate_tools = []

@@ -44,6 +44,7 @@ DEFAULT_APP_CONFIG = {
     },
     "dialog_round": 3,
     "preset_prompt": "",
+    "skills": [],
     "tools": [],
     "workflows": [],
     "datasets": [],

@@ -3,6 +3,7 @@ import {
   type BasePaginatorResponse,
   type BaseResponse,
 } from '@/models/base' // 获取应用信息响应结构
+import type { Skill } from '@/models/skill'
 
 // 获取应用信息响应结构
 export type GetAppResponse = BaseResponse<{
@@ -66,6 +67,7 @@ export type GetDraftAppConfigResponse = BaseResponse<{
   model_config: { provider: string; model: string; parameters: Record<string, any> }
   dialog_round: number
   preset_prompt: string
+  skills: Skill[]
   tools: {
     type: string
     provider: { id: string; name: string; label: string; icon: string; description: string }
@@ -102,6 +104,7 @@ export type UpdateDraftAppConfigRequest = {
   model_config?: { provider: string; model: string; parameters: Record<string, any> }
   dialog_round?: number
   preset_prompt?: string
+  skills?: string[]
   tools?: { type: string; provider_id: string; tool_id: string; params: Record<string, any> }[]
   workflows?: string[]
   datasets?: string[]

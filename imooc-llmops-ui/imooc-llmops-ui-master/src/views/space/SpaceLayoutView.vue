@@ -7,7 +7,6 @@ const router = useRouter()
 const createType = ref<string>('')
 const searchWord = ref(route.query?.search_word || '')
 
-// 绑定输入框的搜索事件
 const search = (value: string) => {
   router.push({
     path: route.path,
@@ -17,7 +16,6 @@ const search = (value: string) => {
   })
 }
 
-// 监听路由里的search_word变化
 watch(
   () => route.query?.search_word,
   () => {
@@ -27,19 +25,16 @@ watch(
 </script>
 
 <template>
-  <!-- 调整边距+隐藏 -->
   <div class="px-6 flex flex-col overflow-hidden h-full">
     <div class="pt-6 sticky top-0 z-20 linen-bg">
-      <!-- 顶层标题+创建按钮 -->
       <div class="flex items-center justify-between mb-6">
-        <!-- 左侧标题 -->
         <div class="flex items-center gap-3">
           <a-avatar :size="32" class="!bg-abyss-800 !text-gold-400">
             <icon-user :size="18" />
           </a-avatar>
           <div class="text-lg font-semibold text-abyss-800">个人空间</div>
         </div>
-        <!-- 创建按钮 -->
+
         <a-button
           v-if="route.path.startsWith('/space/apps')"
           type="primary"
@@ -72,10 +67,17 @@ watch(
         >
           创建知识库
         </a-button>
+        <a-button
+          v-if="route.path.startsWith('/space/skills')"
+          type="primary"
+          class="rounded-lg"
+          @click="createType = 'skill'"
+        >
+          创建技能
+        </a-button>
       </div>
-      <!-- 导航按钮+搜索框 -->
+
       <div class="flex items-center justify-between mb-6">
-        <!-- 左侧导航 -->
         <div class="flex items-center gap-1 p-1 rounded-lg bg-parchment-300/50">
           <router-link
             to="/space/apps"
@@ -110,10 +112,17 @@ watch(
             class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
             active-class="!bg-white !text-gold-600 shadow-sm font-medium"
           >
-            Prompt模板
+            Prompt 模板
+          </router-link>
+          <router-link
+            to="/space/skills"
+            class="rounded-md text-abyss-500 px-3 h-8 leading-8 hover:text-gold-500 transition-all"
+            active-class="!bg-white !text-gold-600 shadow-sm font-medium"
+          >
+            Skills
           </router-link>
         </div>
-        <!-- 右侧搜索 -->
+
         <a-input-search
           v-model="searchWord"
           placeholder="输入关键词进行搜索"
@@ -122,21 +131,21 @@ watch(
         />
       </div>
     </div>
-    <!-- 中间内容 -->
+
     <router-view v-model:create-type="createType" />
   </div>
 </template>
 
 <style scoped>
 :deep(.arco-input-wrapper) {
-  background: rgba(248,245,240,0.8) !important;
-  border: 1px solid rgba(212,175,55,0.12) !important;
+  background: rgba(248, 245, 240, 0.8) !important;
+  border: 1px solid rgba(212, 175, 55, 0.12) !important;
 }
 :deep(.arco-input-wrapper:hover) {
-  border-color: rgba(212,175,55,0.3) !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
 }
 :deep(.arco-input-wrapper.arco-input-focus) {
-  border-color: #D4AF37 !important;
-  box-shadow: 0 0 0 3px rgba(212,175,55,0.08) !important;
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08) !important;
 }
 </style>

@@ -48,6 +48,7 @@ onMounted(async () => {
           <div class="border-r border-gold-dim py-4">
             <preset-prompt-textarea
               v-model:preset_prompt="draftAppConfigForm.preset_prompt"
+              v-model:skills="draftAppConfigForm.skills"
               :app_id="String(route.params?.app_id)"
             />
           </div>

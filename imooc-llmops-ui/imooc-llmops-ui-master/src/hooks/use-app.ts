@@ -332,6 +332,7 @@ export const useGetDraftAppConfig = () => {
         dialog_round: data.dialog_round,
         model_config: data.model_config,
         preset_prompt: data.preset_prompt,
+        skills: data.skills,
         long_term_memory: data.long_term_memory,
         opening_statement: data.opening_statement,
         opening_questions: data.opening_questions,

@@ -6,5 +6,12 @@
 @File    : __init__.py.py
 """
 from .schema import ListField
+from .skill_schema import CreateSkillReq, UpdateSkillReq, GetSkillsWithPageReq, GetSkillResp
 
-__all__ = ["ListField"]
+__all__ = [
+    "ListField",
+    "CreateSkillReq",
+    "UpdateSkillReq",
+    "GetSkillsWithPageReq",
+    "GetSkillResp",
+]

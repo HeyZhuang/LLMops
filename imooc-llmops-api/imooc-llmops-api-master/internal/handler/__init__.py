@@ -29,6 +29,7 @@ from .workflow_handler import WorkflowHandler
 from .feedback_handler import FeedbackHandler
 from .app_export_handler import AppExportHandler
 from .prompt_template_handler import PromptTemplateHandler
+from .skill_handler import SkillHandler
 
 __all__ = [
     "AppHandler",
@@ -55,4 +56,5 @@ __all__ = [
     "FeedbackHandler",
     "AppExportHandler",
     "PromptTemplateHandler",
+    "SkillHandler",
 ]

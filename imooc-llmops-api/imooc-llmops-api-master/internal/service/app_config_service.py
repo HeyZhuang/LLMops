@@ -22,7 +22,7 @@ from internal.core.workflow import Workflow as WorkflowTool
 from internal.entity.app_entity import DEFAULT_APP_CONFIG
 from internal.entity.workflow_entity import WorkflowStatus
 from internal.lib.helper import datetime_to_timestamp, get_value_type
-from internal.model import App, ApiTool, Dataset, AppConfig, AppConfigVersion, AppDatasetJoin, Workflow
+from internal.model import App, ApiTool, Dataset, Skill, AppConfig, AppConfigVersion, AppDatasetJoin, Workflow
 from pkg.sqlalchemy import SQLAlchemy
 from .base_service import BaseService
 from ..core.workflow.entities.workflow_entity import WorkflowConfig
@@ -67,56 +67,108 @@ class AppConfigService(BaseService):
         if set(validate_workflows) != set(draft_app_config.workflows):
             self.update(draft_app_config, workflows=validate_workflows)
 
+        # 8.鏍￠獙鎶€鑳藉垪琛ㄥ搴旂殑鏁版嵁
+        skills, validate_skills = self._process_and_validate_skills(draft_app_config.skills)
+        if validate_skills != draft_app_config.skills:
+            self.update(draft_app_config, skills=validate_skills)
+
         # 20.将数据转换成字典后返回
         return self._process_and_transformer_app_config(
             validate_model_config,
             tools,
             workflows,
             datasets,
+            skills,
             draft_app_config,
         )
 
     def get_app_config(self, app: App) -> dict[str, Any]:
-        """根据传递的应用获取该应用的运行配置"""
-        # 1.提取应用的草稿配置
+        """?????????????????"""
         app_config = app.app_config
 
-        # 2.校验model_config信息，如果运行时配置里的model_config发生变化则进行更新
         validate_model_config = self._process_and_validate_model_config(app_config.model_config)
         if app_config.model_config != validate_model_config:
             self.update(app_config, model_config=validate_model_config)
 
-        # 3.循环遍历工具列表删除已经被删除的工具信息
         tools, validate_tools = self._process_and_validate_tools(app_config.tools)
-
-        # 4.判断是否需要更新草稿配置中的工具列表信息
         if app_config.tools != validate_tools:
-            # 14.更新草稿配置中的工具列表
             self.update(app_config, tools=validate_tools)
 
-        # 5.校验知识库列表，如果引用了不存在/被删除的知识库，需要剔除数据并更新，同时获取知识库的额外信息
         app_dataset_joins = app_config.app_dataset_joins
         origin_datasets = [str(app_dataset_join.dataset_id) for app_dataset_join in app_dataset_joins]
         datasets, validate_datasets = self._process_and_validate_datasets(origin_datasets)
-
-        # 6.判断是否存在已删除的知识库，如果存在则更新
         for dataset_id in (set(origin_datasets) - set(validate_datasets)):
             with self.db.auto_commit():
                 self.db.session.query(AppDatasetJoin).filter(AppDatasetJoin.dataset_id == dataset_id).delete()
 
-        # 7.校验工作流列表对应的数据
         workflows, validate_workflows = self._process_and_validate_workflows(app_config.workflows)
         if set(validate_workflows) != set(app_config.workflows):
             self.update(app_config, workflows=validate_workflows)
 
-        # 8.将数据转换成字典后返回
-        return self._process_and_transformer_app_config(
+        skills, validate_skills = self._process_and_validate_skills(app_config.skills)
+        if validate_skills != app_config.skills:
+            self.update(app_config, skills=validate_skills)
+
+        app_config_dict = self._process_and_transformer_app_config(
             validate_model_config,
             tools,
             workflows,
             datasets,
+            skills,
             app_config,
         )
+        app_config_dict["preset_prompt"] = self._compile_preset_prompt(
+            app_config_dict["preset_prompt"],
+            skills,
+        )
+        return app_config_dict
+
+    def _process_and_validate_skills(self, origin_skills: list[str]) -> tuple[list[dict], list[str]]:
+        """Return skill metadata and the filtered skill id list."""
+        skills = []
+        skill_records = self.db.session.query(Skill).filter(Skill.id.in_(origin_skills)).all()
+        skill_dict = {str(skill_record.id): skill_record for skill_record in skill_records}
+        skill_sets = set(skill_dict.keys())
+
+        validate_skills = [skill_id for skill_id in origin_skills if skill_id in skill_sets]
+        for skill_id in validate_skills:
+            skill = skill_dict.get(str(skill_id))
+            skills.append({
+                "id": str(skill.id),
+                "name": skill.name,
+                "description": skill.description,
+                "content": skill.content,
+                "category": skill.category,
+                "is_public": skill.is_public,
+            })
+
+        return skills, validate_skills
+
+    @staticmethod
+    def _compile_preset_prompt(preset_prompt: str, skills: list[dict]) -> str:
+        """Compile bound skills into the final runtime prompt."""
+        if not skills:
+            return preset_prompt
+
+        skill_blocks = []
+        for index, skill in enumerate(skills, start=1):
+            block_lines = [f"### Skill {index}: {skill['name']}"]
+            if skill.get("category"):
+                block_lines.append(f"- Category: {skill['category']}")
+            if skill.get("description"):
+                block_lines.append(f"- Description: {skill['description']}")
+            content = skill.get("content") or ""
+            if content:
+                block_lines.append(content.strip())
+            skill_blocks.append("\n".join(block_lines).strip())
+
+        compiled_skill_prompt = "\n\n".join(skill_blocks).strip()
+        if not compiled_skill_prompt:
+            return preset_prompt
+
+        if preset_prompt.strip():
+            return f"{preset_prompt.strip()}\n\n## Skills\n{compiled_skill_prompt}"
+        return f"## Skills\n{compiled_skill_prompt}"
 
     def get_langchain_tools_by_tools_config(self, tools_config: list[dict]) -> list[BaseTool]:
         """根据传递的工具配置列表获取langchain工具列表"""
@@ -187,6 +239,7 @@ class AppConfigService(BaseService):
             tools: list[dict],
             workflows: list[dict],
             datasets: list[dict],
+            skills: list[dict],
             app_config: Union[AppConfig, AppConfigVersion]
     ) -> dict[str, Any]:
         """根据传递的插件列表、工作流列表、知识库列表以及应用配置创建字典信息"""
@@ -195,6 +248,7 @@ class AppConfigService(BaseService):
             "model_config": model_config,
             "dialog_round": app_config.dialog_round,
             "preset_prompt": app_config.preset_prompt,
+            "skills": skills,
             "tools": tools,
             "workflows": workflows,
             "datasets": datasets,
