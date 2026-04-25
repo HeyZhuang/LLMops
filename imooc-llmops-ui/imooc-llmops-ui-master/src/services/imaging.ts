@@ -1,8 +1,10 @@
-import { get, post } from '@/utils/request'
+import { get, post, requestBlob, upload } from '@/utils/request'
 import type {
   ImagingPlanningOverviewResponse,
   ImagingWorkflowTemplatesResponse,
   ImagingMvpTasksResponse,
+  ImagingSeriesResponse,
+  ImagingInstanceResponse,
   ImagingStudyResponse,
   ImagingStudyDetailResponse,
   ImagingAuditLogsResponse,
@@ -34,11 +36,34 @@ export const getImagingStudies = () => {
 }
 
 export const uploadImagingDicom = (body: UploadImagingDicomRequest) => {
-  return post<UploadImagingDicomResponse>('/imaging/upload-dicom', { body })
+  const formData = new FormData()
+
+  if (body.file) {
+    formData.append('file', body.file)
+  }
+
+  Object.entries(body).forEach(([key, value]) => {
+    if (key === 'file' || value === undefined || value === null || value === '') return
+    formData.append(key, String(value))
+  })
+
+  return upload<UploadImagingDicomResponse>('/imaging/upload-dicom', { data: formData })
 }
 
 export const getImagingStudyDetail = (studyId: string) => {
   return get<ImagingStudyDetailResponse>(`/imaging/studies/${studyId}`)
+}
+
+export const getImagingStudySeries = (studyId: string) => {
+  return get<ImagingSeriesResponse>(`/imaging/studies/${studyId}/series`)
+}
+
+export const getImagingSeriesInstances = (studyId: string, seriesId: string) => {
+  return get<ImagingInstanceResponse>(`/imaging/studies/${studyId}/series/${seriesId}/instances`)
+}
+
+export const getImagingInstancePreviewBlob = (studyId: string, seriesId: string, instanceId: string) => {
+  return requestBlob(`/imaging/studies/${studyId}/series/${seriesId}/instances/${instanceId}/preview`)
 }
 
 export const createImagingAnalysisTask = (studyId: string) => {

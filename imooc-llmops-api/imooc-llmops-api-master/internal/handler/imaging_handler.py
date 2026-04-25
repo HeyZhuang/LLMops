@@ -3,9 +3,10 @@
 """
 Imaging planning endpoints.
 """
+import io
 from dataclasses import dataclass
 
-from flask import request
+from flask import request, send_file
 from flask_login import login_required, current_user
 from injector import inject
 
@@ -39,9 +40,31 @@ class ImagingHandler:
         return success_json(self.imaging_service.get_study_detail(study_id, current_user))
 
     @login_required
+    def get_study_series(self, study_id: str):
+        return success_json(self.imaging_service.get_study_series(study_id, current_user))
+
+    @login_required
+    def get_series_instances(self, study_id: str, series_id: str):
+        return success_json(self.imaging_service.get_series_instances(study_id, series_id, current_user))
+
+    @login_required
+    def get_instance_preview(self, study_id: str, series_id: str, instance_id: str):
+        payload = self.imaging_service.get_instance_preview(study_id, series_id, instance_id, current_user)
+        return send_file(
+            io.BytesIO(payload),
+            mimetype="image/png",
+            download_name=f"{instance_id}.png",
+        )
+
+    @login_required
     def upload_dicom(self):
-        payload = request.get_json(silent=True) or {}
-        return success_json(self.imaging_service.upload_dicom(payload, current_user))
+        file_storage = request.files.get("file")
+        if file_storage is not None:
+            payload = {key: request.form.get(key) for key in request.form.keys()}
+        else:
+            payload = request.get_json(silent=True) or {}
+
+        return success_json(self.imaging_service.upload_dicom(payload, current_user, file_storage))
 
     @login_required
     def create_analysis_task(self, study_id: str):

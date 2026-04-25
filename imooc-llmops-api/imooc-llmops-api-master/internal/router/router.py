@@ -114,6 +114,21 @@ class Router:
             view_func=self.imaging_handler.get_study_detail,
         )
         bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/series",
+            endpoint="imaging_get_study_series",
+            view_func=self.imaging_handler.get_study_series,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/series/<string:series_id>/instances",
+            endpoint="imaging_get_series_instances",
+            view_func=self.imaging_handler.get_series_instances,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/series/<string:series_id>/instances/<string:instance_id>/preview",
+            endpoint="imaging_get_instance_preview",
+            view_func=self.imaging_handler.get_instance_preview,
+        )
+        bp.add_url_rule(
             "/imaging/studies/<string:study_id>/analysis-tasks",
             methods=["POST"],
             endpoint="imaging_create_analysis_task",

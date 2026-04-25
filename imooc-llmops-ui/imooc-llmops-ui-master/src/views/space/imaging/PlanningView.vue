@@ -16,10 +16,14 @@ const metricCards = computed(() => [
 <template>
   <a-spin :loading="loading" class="block">
     <div class="min-h-full px-6 py-6">
-      <div class="rounded-[28px] border border-[#d7e0dc] bg-[linear-gradient(135deg,#f7fbf8_0%,#eef5f1_45%,#f9f4ea_100%)] p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+      <div
+        class="rounded-[28px] border border-[#d7e0dc] bg-[linear-gradient(135deg,#f7fbf8_0%,#eef5f1_45%,#f9f4ea_100%)] p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+      >
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div class="max-w-3xl">
-            <div class="inline-flex items-center rounded-full bg-white/80 px-4 py-1 text-xs font-semibold tracking-[0.24em] text-[#49635a]">
+            <div
+              class="inline-flex items-center rounded-full bg-white/80 px-4 py-1 text-xs font-semibold tracking-[0.24em] text-[#49635a]"
+            >
               医院影像 AI
             </div>
             <h1 class="mt-4 text-4xl font-black tracking-tight text-[#123629]">

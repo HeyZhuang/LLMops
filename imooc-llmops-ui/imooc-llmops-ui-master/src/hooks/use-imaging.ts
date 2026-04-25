@@ -2,11 +2,16 @@ import { onMounted, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import {
   createImagingAnalysisTask,
+  getImagingAnalysisResult,
   getImagingAuditLogs,
   getImagingFeedbackStats,
   getImagingMvpTasks,
   getImagingOverview,
   getImagingReviewLogs,
+  getImagingStructuredFindings,
+  getImagingStudySeries,
+  getImagingSeriesInstances,
+  getImagingInstancePreviewBlob,
   getImagingStudyDetail,
   getImagingStudies,
   getImagingWorkflowTemplates,
@@ -15,11 +20,15 @@ import {
   uploadImagingDicom,
 } from '@/services/imaging'
 import type {
+  ImagingAnalysisResult,
   ImagingAuditLog,
   ImagingFeedbackStats,
   ImagingMvpTask,
   ImagingPlanningOverview,
   ImagingReviewLog,
+  ImagingSeriesItem,
+  ImagingInstanceItem,
+  ImagingStructuredFindings,
   ImagingStudy,
   ImagingStudyDetail,
   ImagingWorkflowTemplate,
@@ -60,6 +69,43 @@ const createDefaultStudyDetail = (): ImagingStudyDetail => ({
   findings_count: 0,
   report_status: '',
   priority: '',
+  upload: {
+    file_name: '',
+    file_suffix: '',
+    file_size: 0,
+    stored_path: '',
+    storage_mode: 'local',
+    cos_key: '',
+    cos_url: '',
+    upload_file_id: '',
+    upload_history: [],
+  },
+  dicom_metadata: {
+    parser: '',
+    parser_status: '',
+    file_name: '',
+    file_path: '',
+    file_type: '',
+    patient_id: '',
+    study_instance_uid: '',
+    series_instance_uid: '',
+    study_date: '',
+    study_time: '',
+    study_description: '',
+    series_description: '',
+    modality: '',
+    body_part_examined: '',
+    slice_thickness: '',
+    series_number: '',
+    instance_number: '',
+    rows: 0,
+    columns: 0,
+    window_center: '',
+    window_width: '',
+    manufacturer: '',
+    extracted_files: 0,
+    parsed_instances: 0,
+  },
   series: [],
   findings: [],
   report_draft: {
@@ -82,6 +128,28 @@ const createDefaultFeedbackStats = (): ImagingFeedbackStats => ({
   needs_revision: 0,
   rejected: 0,
   approval_rate: 0,
+})
+
+const createDefaultAnalysisResult = (): ImagingAnalysisResult => ({
+  study_id: '',
+  task_id: '',
+  status: '',
+  task_type: '',
+  model_name: '',
+  model_version: '',
+  summary: '',
+  findings: [],
+  measurements: [],
+  overlays: [],
+  updated_at: 0,
+})
+
+const createDefaultStructuredFindings = (): ImagingStructuredFindings => ({
+  study_id: '',
+  status: '',
+  summary: '',
+  findings: [],
+  measurements: [],
 })
 
 export const useImagingPlanning = () => {
@@ -162,6 +230,93 @@ export const useImagingStudyDetail = () => {
     loading,
     study,
     loadImagingStudyDetail,
+  }
+}
+
+export const useImagingAnalysis = () => {
+  const loading = ref(false)
+  const analysisResult = ref<ImagingAnalysisResult>(createDefaultAnalysisResult())
+  const structuredFindings = ref<ImagingStructuredFindings>(createDefaultStructuredFindings())
+
+  const loadImagingAnalysis = async (studyId: string) => {
+    try {
+      loading.value = true
+      const [resultResp, findingsResp] = await Promise.all([
+        getImagingAnalysisResult(studyId),
+        getImagingStructuredFindings(studyId),
+      ])
+      analysisResult.value = resultResp.data
+      structuredFindings.value = findingsResp.data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    loading,
+    analysisResult,
+    structuredFindings,
+    loadImagingAnalysis,
+  }
+}
+
+export const useImagingSeries = () => {
+  const loading = ref(false)
+  const series = ref<ImagingSeriesItem[]>([])
+  const instances = ref<Record<string, ImagingInstanceItem[]>>({})
+  const previewUrls = ref<Record<string, string>>({})
+
+  const loadImagingSeries = async (studyId: string) => {
+    try {
+      loading.value = true
+      const resp = await getImagingStudySeries(studyId)
+      series.value = resp.data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const loadSeriesInstances = async (studyId: string, seriesId: string) => {
+    try {
+      loading.value = true
+      const resp = await getImagingSeriesInstances(studyId, seriesId)
+      instances.value = {
+        ...instances.value,
+        [seriesId]: resp.data,
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const loadInstancePreview = async (studyId: string, seriesId: string, instanceId: string) => {
+    const currentUrl = previewUrls.value[instanceId]
+    if (currentUrl) {
+      return currentUrl
+    }
+
+    try {
+      loading.value = true
+      const blob = await getImagingInstancePreviewBlob(studyId, seriesId, instanceId)
+      const objectUrl = URL.createObjectURL(blob)
+      previewUrls.value = {
+        ...previewUrls.value,
+        [instanceId]: objectUrl,
+      }
+      return objectUrl
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    loading,
+    series,
+    instances,
+    previewUrls,
+    loadImagingSeries,
+    loadSeriesInstances,
+    loadInstancePreview,
   }
 }
 

@@ -27,6 +27,15 @@ class CosService:
     """腾讯云cos对象存储服务"""
     upload_file_service: UploadFileService
 
+    @classmethod
+    def is_configured(cls) -> bool:
+        return bool(
+            os.getenv("COS_SECRET_ID")
+            and os.getenv("COS_SECRET_KEY")
+            and os.getenv("COS_REGION")
+            and os.getenv("COS_BUCKET")
+        )
+
     def upload_file(self, file: FileStorage, only_image: bool, account: Account) -> UploadFile:
         """上传文件到腾讯云cos对象存储，上传后返回文件的信息"""
         # 1.提取文件扩展名并检测是否可以上传
@@ -74,6 +83,41 @@ class CosService:
         bucket = self._get_bucket()
 
         client.download_file(bucket, key, target_file_path)
+
+    def upload_bytes(
+        self,
+        content: bytes,
+        filename: str,
+        extension: str,
+        mime_type: str,
+        account: Account,
+        key_prefix: str = "",
+    ) -> UploadFile:
+        client = self._get_client()
+        bucket = self._get_bucket()
+
+        random_filename = str(uuid.uuid4()) + (f".{extension}" if extension else "")
+        now = datetime.now()
+        prefix = key_prefix.strip("/")
+        date_prefix = f"{now.year}/{now.month:02d}/{now.day:02d}"
+        upload_filename = f"{date_prefix}/{random_filename}" if not prefix else f"{prefix}/{date_prefix}/{random_filename}"
+
+        try:
+            client.put_object(bucket, content, upload_filename)
+        except Exception as e:
+            import logging
+            logging.error("COS上传异常: %s", e, exc_info=True)
+            raise FailException("上传文件失败，请稍后重试")
+
+        return self.upload_file_service.create_upload_file(
+            account_id=account.id,
+            name=filename,
+            key=upload_filename,
+            size=len(content),
+            extension=extension,
+            mime_type=mime_type,
+            hash=hashlib.sha3_256(content).hexdigest(),
+        )
 
     @classmethod
     def get_file_url(cls, key: str) -> str:

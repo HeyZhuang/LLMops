@@ -68,16 +68,90 @@ export type ImagingStudy = {
   findings_count: number
   report_status: string
   priority: string
+  upload?: {
+    file_name?: string
+    file_suffix?: string
+    file_size?: number
+    stored_path?: string
+    storage_mode?: string
+    cos_key?: string
+    cos_url?: string
+    upload_file_id?: string
+    upload_history?: {
+      id: string
+      name: string
+      key: string
+      storage: string
+      mime_type: string
+      size: number
+      url?: string
+    }[]
+  }
+  dicom_metadata?: {
+    parser?: string
+    parser_status?: string
+    file_name?: string
+    file_path?: string
+    file_type?: string
+    patient_id?: string
+    study_instance_uid?: string
+    series_instance_uid?: string
+    study_date?: string
+    study_time?: string
+    study_description?: string
+    series_description?: string
+    modality?: string
+    body_part_examined?: string
+    slice_thickness?: string
+    series_number?: string
+    instance_number?: string
+    rows?: number
+    columns?: number
+    window_center?: string
+    window_width?: string
+    manufacturer?: string
+    extracted_files?: number
+    parsed_instances?: number
+  }
+  series?: {
+    id?: string
+    series_uid?: string
+    name: string
+    images: number
+    slice_thickness: string
+    orientation?: string
+  }[]
 }
 
 export type ImagingStudyResponse = BaseResponse<ImagingStudy[]>
 
+export type ImagingSeriesItem = {
+  id: string
+  series_uid?: string
+  name: string
+  images: number
+  slice_thickness: string
+  orientation?: string
+}
+
+export type ImagingSeriesResponse = BaseResponse<ImagingSeriesItem[]>
+
+export type ImagingInstanceItem = {
+  id: string
+  sop_instance_uid: string
+  instance_number: number
+  file_path: string
+  thumbnail_path: string
+  window_width: string
+  window_center: string
+  rows: number
+  columns: number
+}
+
+export type ImagingInstanceResponse = BaseResponse<ImagingInstanceItem[]>
+
 export type ImagingStudyDetail = ImagingStudy & {
-  series: {
-    name: string
-    images: number
-    slice_thickness: string
-  }[]
+  series: ImagingSeriesItem[]
   findings: {
     title: string
     confidence: number
@@ -137,6 +211,7 @@ export type ImagingFeedbackStats = {
 export type ImagingFeedbackStatsResponse = BaseResponse<ImagingFeedbackStats>
 
 export type UploadImagingDicomRequest = {
+  file?: File
   accession_number?: string
   patient_code?: string
   patient_name_masked?: string
@@ -151,6 +226,10 @@ export type UploadImagingDicomResult = {
   study_id: string
   status: string
   message: string
+  file_name?: string
+  file_size?: number
+  storage_mode?: string
+  cos_url?: string
 }
 
 export type UploadImagingDicomResponse = BaseResponse<UploadImagingDicomResult>

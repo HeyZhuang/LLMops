@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import moment from 'moment'
 import { computed, reactive, ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import { useRouter } from 'vue-router'
 import { useImagingStudies, useImagingStudyActions } from '@/hooks/use-imaging'
 
@@ -9,6 +10,7 @@ const { loading, studies, loadImagingStudies } = useImagingStudies()
 const { submitting, handleUploadDicom, handleCreateAnalysisTask } = useImagingStudyActions()
 
 const uploadModalVisible = ref(false)
+const selectedFile = ref<File | null>(null)
 const uploadForm = reactive({
   patient_name_masked: '',
   patient_code: '',
@@ -56,6 +58,7 @@ const resetUploadForm = () => {
   uploadForm.body_part = 'Chest'
   uploadForm.study_description = ''
   uploadForm.priority = 'normal'
+  selectedFile.value = null
 }
 
 const openUploadModal = () => {
@@ -64,13 +67,19 @@ const openUploadModal = () => {
 }
 
 const submitUpload = async () => {
+  if (!selectedFile.value) {
+    Message.warning('请先选择 DICOM 文件')
+    return
+  }
+
   const result = await handleUploadDicom({
+    file: selectedFile.value,
     patient_name_masked: uploadForm.patient_name_masked || '匿名患者',
     patient_code: uploadForm.patient_code,
     modality: uploadForm.modality,
     body_part: uploadForm.body_part,
     study_description:
-      uploadForm.study_description || `${uploadForm.body_part} ${uploadForm.modality} manual upload`,
+      uploadForm.study_description || `${uploadForm.body_part} ${uploadForm.modality} DICOM 上传`,
     priority: uploadForm.priority,
     source_type: 'manual_upload',
   })
@@ -86,6 +95,11 @@ const submitUpload = async () => {
 const createAnalysis = async (studyId: string) => {
   await handleCreateAnalysisTask(studyId)
   await loadImagingStudies()
+}
+
+const handleFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  selectedFile.value = input.files?.[0] || null
 }
 </script>
 
@@ -213,6 +227,21 @@ const createAnalysis = async (studyId: string) => {
       @cancel="uploadModalVisible = false"
     >
       <div class="grid gap-4 py-2">
+        <div class="rounded-2xl border border-dashed border-[#cfdad4] bg-[#f7faf8] px-4 py-4">
+          <div class="text-sm font-semibold text-[#17382d]">选择 DICOM 文件</div>
+          <div class="mt-2 text-xs leading-6 text-[#5d746b]">
+            支持 `.dcm`、`.dicom` 和压缩包 `.zip`，用于当前 MVP 演示链路。
+          </div>
+          <input
+            class="mt-3 block w-full text-sm text-[#355346] file:mr-4 file:rounded-xl file:border-0 file:bg-[#17382d] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+            type="file"
+            accept=".dcm,.dicom,.zip"
+            @change="handleFileChange"
+          />
+          <div v-if="selectedFile" class="mt-3 text-xs text-[#5d746b]">
+            已选择：{{ selectedFile.name }}
+          </div>
+        </div>
         <a-input v-model="uploadForm.patient_name_masked" placeholder="脱敏患者姓名，例如 Zhang**" />
         <a-input v-model="uploadForm.patient_code" placeholder="患者编号或检查号" />
         <a-select v-model="uploadForm.modality" placeholder="检查模态">

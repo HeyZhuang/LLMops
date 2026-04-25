@@ -298,6 +298,28 @@ export const request = <T>(url: string, options = {}) => {
   return baseFetch<T>(url, options)
 }
 
+export const requestBlob = async (url: string, options: FetchOptionType = {}) => {
+  const fetchOptions = createFetchOptions({ ...options, method: options.method || 'GET' })
+  const { credential, clear: clearCredential } = useCredentialStore()
+  const access_token = credential.access_token
+  if (access_token) fetchOptions.headers.set('Authorization', `Bearer ${access_token}`)
+
+  const urlWithPrefix = `${apiPrefix}${url.startsWith('/') ? url : `/${url}`}`
+  const response = await globalThis.fetch(urlWithPrefix, fetchOptions as RequestInit)
+
+  if (response.status === 401) {
+    clearCredential()
+    await navigateSafely({ name: 'auth-login' })
+    throw new Error('登录状态已失效，请重新登录')
+  }
+
+  if (!response.ok) {
+    throw new Error(`请求失败，HTTP ${response.status}`)
+  }
+
+  return await response.blob()
+}
+
 export const get = <T>(url: string, options = {}) => {
   return request<T>(url, Object.assign({}, options, { method: 'GET' }))
 }
