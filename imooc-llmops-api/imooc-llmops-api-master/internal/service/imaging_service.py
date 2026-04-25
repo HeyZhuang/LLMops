@@ -21,8 +21,10 @@ from internal.model import (
     Document,
     Workflow,
     ImagingStudy,
+    ImagingAiResult,
     ImagingReport,
     ImagingReview,
+    ImagingAuditLog,
 )
 from pkg.sqlalchemy import SQLAlchemy
 from .base_service import BaseService
@@ -36,6 +38,9 @@ class ImagingService(BaseService):
     def _db_tables_ready(self) -> bool:
         inspector = inspect(self.db.engine)
         return inspector.has_table("imaging_report") and inspector.has_table("imaging_review")
+
+    def _has_table(self, table_name: str) -> bool:
+        return inspect(self.db.engine).has_table(table_name)
 
     def _load_persisted_state(self, account_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         if self._db_tables_ready():
@@ -66,6 +71,48 @@ class ImagingService(BaseService):
         account_state = self._load_state().get(account_id, {})
         return account_state.get("reports", {}), account_state.get("reviews", {})
 
+    def _load_db_audit_logs(self, study_id: str) -> list[dict[str, Any]]:
+        if not self._has_table("imaging_audit_log"):
+            return []
+
+        items = self.db.session.query(ImagingAuditLog).filter(
+            ImagingAuditLog.study_id == UUID(study_id)
+        ).order_by(ImagingAuditLog.created_at.desc()).all()
+
+        return [
+            {
+                "id": str(item.id),
+                "action": item.action,
+                "target_type": item.target_type,
+                "target_id": str(item.target_id) if item.target_id else "",
+                "success": item.success,
+                "details": item.details or {},
+                "created_at": int(item.created_at.timestamp()) if item.created_at else 0,
+            }
+            for item in items
+        ]
+
+    def _load_db_review_logs(self, study_id: str) -> list[dict[str, Any]]:
+        if not self._has_table("imaging_review"):
+            return []
+
+        items = self.db.session.query(ImagingReview).filter(
+            ImagingReview.study_id == UUID(study_id)
+        ).order_by(ImagingReview.created_at.desc()).all()
+
+        return [
+            {
+                "id": str(item.id),
+                "label": item.review_label,
+                "comment": item.comment,
+                "review_type": item.review_type,
+                "reviewer_id": str(item.reviewer_id),
+                "status": item.review_payload.get("status", item.review_label),
+                "created_at": int(item.created_at.timestamp()) if item.created_at else 0,
+            }
+            for item in items
+        ]
+
     def _load_db_studies(self, account_id: str) -> list[dict[str, Any]]:
         if not inspect(self.db.engine).has_table("imaging_study"):
             return []
@@ -94,6 +141,65 @@ class ImagingService(BaseService):
         ]
 
     @staticmethod
+    def _default_analysis_payload(study: dict[str, Any]) -> dict[str, Any]:
+        if study["body_part"] == "Chest":
+            findings = [
+                {
+                    "title": "Right upper lobe nodule",
+                    "confidence": 0.93,
+                    "description": "8 mm solid nodule with clear margin in the apical segment.",
+                    "location": "right upper lobe",
+                    "size": "8 mm",
+                    "risk_level": "medium",
+                },
+                {
+                    "title": "Right upper lobe micronodule",
+                    "confidence": 0.74,
+                    "description": "3 mm tiny nodule, follow-up suggested according to guideline.",
+                    "location": "right upper lobe",
+                    "size": "3 mm",
+                    "risk_level": "low",
+                },
+            ]
+            summary = "Two pulmonary nodules detected in the right upper lobe. Recommend follow-up review."
+        elif study["body_part"] == "Brain":
+            findings = [
+                {
+                    "title": "No definite acute hemorrhage",
+                    "confidence": 0.88,
+                    "description": "No obvious hyperdense hemorrhagic focus identified on the current scan.",
+                    "location": "intracranial",
+                    "size": "",
+                    "risk_level": "low",
+                },
+            ]
+            summary = "No clear intracranial hemorrhage detected. Manual review recommended."
+        else:
+            findings = [
+                {
+                    "title": "Motion artifact warning",
+                    "confidence": 0.67,
+                    "description": "Mild motion artifact affects the lower lung field visibility.",
+                    "location": "lower lung field",
+                    "size": "",
+                    "risk_level": "low",
+                },
+            ]
+            summary = "Image quality warning detected. Manual confirmation suggested."
+
+        return {
+            "status": "completed",
+            "task_type": "detection",
+            "model_name": "imaging-mvp-demo",
+            "model_version": "v0.1",
+            "summary": summary,
+            "findings": findings,
+            "measurements": [],
+            "overlays": [],
+            "updated_at": int(datetime.now().timestamp()),
+        }
+
+    @staticmethod
     def _state_file() -> Path:
         return Path(__file__).resolve().parents[4] / "storage" / "imaging_demo_state.json"
 
@@ -111,6 +217,133 @@ class ImagingService(BaseService):
         state_file = self._state_file()
         state_file.parent.mkdir(parents=True, exist_ok=True)
         state_file.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _load_demo_studies(self, account_id: str) -> list[dict[str, Any]]:
+        account_state = self._load_state().get(account_id, {})
+        return account_state.get("studies", [])
+
+    def _save_demo_study(self, account_id: str, study: dict[str, Any]) -> None:
+        state = self._load_state()
+        account_state = state.setdefault(account_id, {})
+        studies = account_state.setdefault("studies", [])
+
+        for index, item in enumerate(studies):
+            if item.get("id") == study["id"]:
+                studies[index] = study
+                break
+        else:
+            studies.append(study)
+
+        self._save_state(state)
+
+    def _load_demo_analysis_map(self, account_id: str) -> dict[str, Any]:
+        account_state = self._load_state().get(account_id, {})
+        return account_state.get("analysis_results", {})
+
+    def _save_demo_analysis_result(self, account_id: str, study_id: str, payload: dict[str, Any]) -> None:
+        state = self._load_state()
+        account_state = state.setdefault(account_id, {})
+        analysis_results = account_state.setdefault("analysis_results", {})
+        analysis_results[study_id] = payload
+        self._save_state(state)
+
+    def _append_demo_audit_log(
+        self,
+        account_id: str,
+        study_id: str,
+        action: str,
+        target_type: str,
+        target_id: str,
+        details: dict[str, Any] | None = None,
+        success: bool = True,
+    ) -> None:
+        state = self._load_state()
+        account_state = state.setdefault(account_id, {})
+        audit_logs = account_state.setdefault("audit_logs", [])
+        audit_logs.append(
+            {
+                "id": str(uuid5(NAMESPACE_DNS, f"{study_id}-{action}-{len(audit_logs) + 1}")),
+                "study_id": study_id,
+                "action": action,
+                "target_type": target_type,
+                "target_id": target_id,
+                "success": success,
+                "details": details or {},
+                "created_at": int(datetime.now().timestamp()),
+            }
+        )
+        self._save_state(state)
+
+    def _load_demo_audit_logs(self, account_id: str, study_id: str) -> list[dict[str, Any]]:
+        account_state = self._load_state().get(account_id, {})
+        items = account_state.get("audit_logs", [])
+        return [
+            item for item in reversed(items)
+            if item.get("study_id") == study_id
+        ]
+
+    def _write_audit_log(
+        self,
+        account,
+        study_id: str,
+        action: str,
+        target_type: str,
+        target_id: str,
+        details: dict[str, Any] | None = None,
+        success: bool = True,
+    ) -> None:
+        if self._has_table("imaging_audit_log"):
+            self.create(
+                ImagingAuditLog,
+                study_id=UUID(study_id),
+                operator_id=account.id,
+                action=action,
+                target_type=target_type,
+                target_id=UUID(target_id) if target_id else None,
+                success=success,
+                details=details or {},
+            )
+            return
+
+        self._append_demo_audit_log(
+            account_id=str(account.id),
+            study_id=study_id,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            details=details,
+            success=success,
+        )
+
+    def _find_study_or_none(self, study_id: str, account) -> dict[str, Any] | None:
+        studies = self._load_db_studies(str(account.id))
+        if not studies:
+            studies = self._load_demo_studies(str(account.id)) + self._build_demo_studies(str(account.id))
+        return next((item for item in studies if item["id"] == study_id), None)
+
+    def _load_db_analysis_result(self, study_id: str) -> dict[str, Any] | None:
+        if not self._has_table("imaging_ai_result"):
+            return None
+
+        item = self.db.session.query(ImagingAiResult).filter(
+            ImagingAiResult.study_id == UUID(study_id)
+        ).order_by(ImagingAiResult.created_at.desc()).first()
+
+        if item is None:
+            return None
+
+        return {
+            "task_id": str(item.id),
+            "status": item.result_status,
+            "task_type": item.task_type,
+            "model_name": item.model_name,
+            "model_version": item.model_version,
+            "summary": item.summary,
+            "findings": item.findings or [],
+            "measurements": item.measurements or [],
+            "overlays": item.overlays or [],
+            "updated_at": int(item.created_at.timestamp()) if item.created_at else 0,
+        }
 
     @staticmethod
     def _build_demo_studies(account_id: str) -> list[dict[str, Any]]:
@@ -163,6 +396,22 @@ class ImagingService(BaseService):
                 "priority": "normal",
             },
         ]
+
+    @staticmethod
+    def _build_feedback_stats(reviews: list[dict[str, Any]]) -> dict[str, Any]:
+        total = len(reviews)
+        approved = sum(1 for item in reviews if item["label"] == "approved")
+        needs_revision = sum(1 for item in reviews if item["label"] == "needs_revision")
+        rejected = sum(1 for item in reviews if item["label"] == "rejected")
+        approval_rate = round((approved / total) * 100, 1) if total else 0
+
+        return {
+            "total_reviews": total,
+            "approved": approved,
+            "needs_revision": needs_revision,
+            "rejected": rejected,
+            "approval_rate": approval_rate,
+        }
 
     def get_overview(self, account) -> dict[str, Any]:
         total_apps = self.db.session.query(func.count(App.id)).filter(App.account_id == account.id).scalar() or 0
@@ -294,8 +543,9 @@ class ImagingService(BaseService):
     def get_studies(self, account) -> list[dict[str, Any]]:
         studies = self._load_db_studies(str(account.id))
         if not studies:
-            studies = self._build_demo_studies(str(account.id))
+            studies = self._load_demo_studies(str(account.id)) + self._build_demo_studies(str(account.id))
         reports, reviews = self._load_persisted_state(str(account.id))
+        analysis_results = self._load_demo_analysis_map(str(account.id))
 
         for study in studies:
             report = reports.get(study["id"])
@@ -307,17 +557,44 @@ class ImagingService(BaseService):
             if review:
                 study["status"] = review.get("status", study["status"])
 
+            analysis_result = analysis_results.get(study["id"])
+            if analysis_result:
+                study["status"] = "ai_completed"
+                study["ai_summary"] = analysis_result.get("summary", study["ai_summary"])
+                study["findings_count"] = len(analysis_result.get("findings", []))
+
         return studies
 
     def get_study_detail(self, study_id: str, account) -> dict[str, Any]:
         studies = self._load_db_studies(str(account.id))
         if not studies:
-            studies = self._build_demo_studies(str(account.id))
+            studies = self._load_demo_studies(str(account.id)) + self._build_demo_studies(str(account.id))
         study = next((item for item in studies if item["id"] == study_id), None)
         if study is None:
             study = studies[0]
 
-        if study["body_part"] == "Chest":
+        self._write_audit_log(
+            account=account,
+            study_id=study["id"],
+            action="study_detail_viewed",
+            target_type="study",
+            target_id=study["id"],
+            details={"patient_code": study["patient_code"]},
+        )
+
+        analysis_result = self.get_analysis_result(study["id"], account)
+        structured_findings = analysis_result.get("findings", [])
+
+        if structured_findings:
+            findings = [
+                {
+                    "title": item.get("title", ""),
+                    "confidence": item.get("confidence", 0),
+                    "description": item.get("description", ""),
+                }
+                for item in structured_findings
+            ]
+        elif study["body_part"] == "Chest":
             findings = [
                 {
                     "title": "Right upper lobe nodule",
@@ -360,6 +637,23 @@ class ImagingService(BaseService):
                 "Impression: Recommend clinician correlation and repeat image if clinically indicated."
             )
 
+        if structured_findings and study["body_part"] == "Chest":
+            report_draft = (
+                "Findings: Small solid pulmonary nodules are seen in the right upper lobe, "
+                "largest about 8 mm. No pleural effusion or enlarged mediastinal lymph nodes. "
+                "Impression: Right upper lobe pulmonary nodules, recommend follow-up with low-dose CT."
+            )
+        elif structured_findings and study["body_part"] == "Brain":
+            report_draft = (
+                "Findings: Brain parenchyma density is generally symmetric. No definite acute hemorrhage seen. "
+                "Ventricular system is not enlarged. Impression: No obvious acute intracranial hemorrhage on current CT."
+            )
+        elif structured_findings:
+            report_draft = (
+                "Findings: Mild motion artifact is present. No large focal consolidation is clearly identified. "
+                "Impression: Recommend clinician correlation and repeat image if clinically indicated."
+            )
+
         reports, reviews = self._load_persisted_state(str(account.id))
         report_state = reports.get(study["id"], {})
         review_state = reviews.get(study["id"], {})
@@ -380,7 +674,7 @@ class ImagingService(BaseService):
             "timeline": [
                 {"label": "Study imported", "value": "Completed"},
                 {"label": "Quality check", "value": study["quality_status"]},
-                {"label": "AI inference", "value": review_state.get("status", study["status"])},
+                {"label": "AI inference", "value": analysis_result.get("status", review_state.get("status", study["status"]))},
                 {"label": "Doctor review", "value": report_state.get("status", study["report_status"])},
             ],
             "review": {
@@ -389,6 +683,211 @@ class ImagingService(BaseService):
                 "updated_at": review_state.get("updated_at", 0),
             },
         }
+
+    def upload_dicom(self, payload: dict[str, Any], account) -> dict[str, Any]:
+        study_uid = str(uuid5(NAMESPACE_DNS, f"{account.id}-{datetime.now().timestamp()}-study"))
+        accession_number = str(payload.get("accession_number", "")).strip() or study_uid[-12:].upper()
+        patient_code = str(payload.get("patient_code", "")).strip() or accession_number
+        study = {
+            "id": str(uuid5(NAMESPACE_DNS, f"{study_uid}-study-id")),
+            "patient_code": patient_code,
+            "patient_name_masked": str(payload.get("patient_name_masked", "匿名患者")).strip() or "匿名患者",
+            "modality": str(payload.get("modality", "CT")).strip() or "CT",
+            "body_part": str(payload.get("body_part", "Chest")).strip() or "Chest",
+            "study_description": str(payload.get("study_description", "Manual DICOM upload")).strip() or "Manual DICOM upload",
+            "study_time": int(datetime.now().timestamp()),
+            "status": "waiting",
+            "quality_status": "pending",
+            "ai_summary": "DICOM uploaded. Waiting for quality check and AI inference.",
+            "findings_count": 0,
+            "report_status": "not_started",
+            "priority": str(payload.get("priority", "normal")).strip() or "normal",
+        }
+
+        if self._has_table("imaging_study"):
+            item = self.create(
+                ImagingStudy,
+                account_id=account.id,
+                study_uid=study_uid,
+                accession_number=accession_number,
+                patient_uid=patient_code,
+                patient_name_masked=study["patient_name_masked"],
+                modality=study["modality"],
+                body_part=study["body_part"],
+                study_description=study["study_description"],
+                source_type=str(payload.get("source_type", "manual_upload")).strip() or "manual_upload",
+                quality_status="pending",
+                processing_status="waiting",
+                study_time=datetime.now(),
+                meta={
+                    "priority": study["priority"],
+                    "report_status": "not_started",
+                    "findings": [],
+                    "ai_summary": study["ai_summary"],
+                },
+            )
+            study["id"] = str(item.id)
+        else:
+            self._save_demo_study(str(account.id), study)
+
+        self._write_audit_log(
+            account=account,
+            study_id=study["id"],
+            action="dicom_uploaded",
+            target_type="study",
+            target_id=study["id"],
+            details={"modality": study["modality"], "body_part": study["body_part"]},
+        )
+        return {
+            "study_id": study["id"],
+            "status": "uploaded",
+            "message": "DICOM uploaded and queued for processing.",
+        }
+
+    def create_analysis_task(self, study_id: str, account) -> dict[str, Any]:
+        study = self._find_study_or_none(study_id, account)
+        if study is None:
+            return {"study_id": study_id, "status": "not_found"}
+
+        payload = self._default_analysis_payload(study)
+
+        if self._has_table("imaging_ai_result") and self._has_table("imaging_study"):
+            item = self.create(
+                ImagingAiResult,
+                study_id=UUID(study_id),
+                model_name=payload["model_name"],
+                model_version=payload["model_version"],
+                task_type=payload["task_type"],
+                finding_type=study["body_part"].lower(),
+                confidence=str(max((entry["confidence"] for entry in payload["findings"]), default=0)),
+                result_status=payload["status"],
+                findings=payload["findings"],
+                measurements=payload["measurements"],
+                overlays=payload["overlays"],
+                summary=payload["summary"],
+                raw_payload=payload,
+            )
+            db_study = self.db.session.query(ImagingStudy).filter(
+                ImagingStudy.id == UUID(study_id)
+            ).one_or_none()
+            if db_study is not None:
+                meta = dict(db_study.meta or {})
+                meta["findings"] = payload["findings"]
+                meta["ai_summary"] = payload["summary"]
+                meta["report_status"] = meta.get("report_status", "pending_draft")
+                meta["priority"] = meta.get("priority", study.get("priority", "normal"))
+                self.update(
+                    db_study,
+                    processing_status="ai_completed",
+                    quality_status="qualified" if db_study.quality_status == "pending" else db_study.quality_status,
+                    meta=meta,
+                )
+            task_id = str(item.id)
+        else:
+            demo_study = dict(study)
+            demo_study["status"] = "ai_completed"
+            demo_study["quality_status"] = "qualified" if demo_study["quality_status"] == "pending" else demo_study["quality_status"]
+            demo_study["ai_summary"] = payload["summary"]
+            demo_study["findings_count"] = len(payload["findings"])
+            if demo_study["report_status"] == "not_started":
+                demo_study["report_status"] = "pending_draft"
+            self._save_demo_study(str(account.id), demo_study)
+            task_id = str(uuid5(NAMESPACE_DNS, f"{study_id}-analysis-task"))
+            self._save_demo_analysis_result(
+                str(account.id),
+                study_id,
+                {
+                    "task_id": task_id,
+                    **payload,
+                },
+            )
+
+        self._write_audit_log(
+            account=account,
+            study_id=study_id,
+            action="analysis_task_created",
+            target_type="analysis",
+            target_id=task_id,
+            details={"task_type": payload["task_type"], "status": payload["status"]},
+        )
+        return {
+            "study_id": study_id,
+            "task_id": task_id,
+            "status": payload["status"],
+            "task_type": payload["task_type"],
+        }
+
+    def get_analysis_result(self, study_id: str, account) -> dict[str, Any]:
+        study = self._find_study_or_none(study_id, account)
+        if study is None:
+            return {"study_id": study_id, "status": "not_found", "findings": []}
+
+        db_result = self._load_db_analysis_result(study_id)
+        if db_result is not None:
+            return {"study_id": study_id, **db_result}
+
+        demo_result = self._load_demo_analysis_map(str(account.id)).get(study_id)
+        if demo_result is not None:
+            return {"study_id": study_id, **demo_result}
+
+        payload = self._default_analysis_payload(study)
+        return {
+            "study_id": study_id,
+            "task_id": "",
+            **payload,
+        }
+
+    def get_structured_findings(self, study_id: str, account) -> dict[str, Any]:
+        result = self.get_analysis_result(study_id, account)
+        return {
+            "study_id": study_id,
+            "status": result.get("status", "pending"),
+            "summary": result.get("summary", ""),
+            "findings": result.get("findings", []),
+            "measurements": result.get("measurements", []),
+        }
+
+    def get_audit_logs(self, study_id: str, account) -> list[dict[str, Any]]:
+        studies = self.get_studies(account)
+        study = next((item for item in studies if item["id"] == study_id), None)
+        if study is None:
+            return []
+
+        logs = self._load_db_audit_logs(study_id)
+        if logs:
+            return logs
+        return self._load_demo_audit_logs(str(account.id), study_id)
+
+    def get_review_logs(self, study_id: str, account) -> list[dict[str, Any]]:
+        studies = self.get_studies(account)
+        study = next((item for item in studies if item["id"] == study_id), None)
+        if study is None:
+            return []
+
+        logs = self._load_db_review_logs(study_id)
+        if logs:
+            return logs
+
+        _, reviews = self._load_persisted_state(str(account.id))
+        review = reviews.get(study_id)
+        if not review:
+            return []
+
+        return [
+            {
+                "id": str(uuid5(NAMESPACE_DNS, f"{study_id}-demo-review")),
+                "label": review.get("label", ""),
+                "comment": review.get("comment", ""),
+                "review_type": "doctor_review",
+                "reviewer_id": str(account.id),
+                "status": review.get("status", ""),
+                "created_at": review.get("updated_at", 0),
+            }
+        ]
+
+    def get_feedback_stats(self, study_id: str, account) -> dict[str, Any]:
+        reviews = self.get_review_logs(study_id, account)
+        return self._build_feedback_stats(reviews)
 
     def save_report_draft(self, study_id: str, content: str, account) -> dict[str, Any]:
         if self._db_tables_ready():
@@ -413,11 +912,20 @@ class ImagingService(BaseService):
                     report_status="doctor_editing",
                     doctor_notes="Doctor updated the report draft and saved the latest version.",
                 )
-            return {
+            result = {
                 "study_id": study_id,
                 "status": "doctor_editing",
                 "updated_at": int(report.updated_at.timestamp()) if report.updated_at else 0,
             }
+            self._write_audit_log(
+                account=account,
+                study_id=study_id,
+                action="report_draft_saved",
+                target_type="report",
+                target_id=str(report.id),
+                details={"status": "doctor_editing"},
+            )
+            return result
 
         state = self._load_state()
         account_state = state.setdefault(str(account.id), {})
@@ -429,11 +937,20 @@ class ImagingService(BaseService):
             "updated_at": int(datetime.now().timestamp()),
         }
         self._save_state(state)
-        return {
+        result = {
             "study_id": study_id,
             "status": "doctor_editing",
             "updated_at": reports[study_id]["updated_at"],
         }
+        self._write_audit_log(
+            account=account,
+            study_id=study_id,
+            action="report_draft_saved",
+            target_type="report",
+            target_id=study_id,
+            details={"status": "doctor_editing"},
+        )
+        return result
 
     def submit_review(self, study_id: str, label: str, comment: str, account) -> dict[str, Any]:
         status_map = {
@@ -489,12 +1006,21 @@ class ImagingService(BaseService):
                     review_payload=payload,
                     report_id=report.id,
                 )
-            return {
+            result = {
                 "study_id": study_id,
                 "label": label,
                 "status": review_status,
                 "updated_at": int(review.created_at.timestamp()) if review.created_at else 0,
             }
+            self._write_audit_log(
+                account=account,
+                study_id=study_id,
+                action="study_review_submitted",
+                target_type="review",
+                target_id=str(review.id),
+                details={"label": label, "status": review_status},
+            )
+            return result
 
         state = self._load_state()
         account_state = state.setdefault(str(account.id), {})
@@ -519,9 +1045,18 @@ class ImagingService(BaseService):
             report["summary"] = "Doctor rejected the current draft and requested manual rewrite."
 
         self._save_state(state)
-        return {
+        result = {
             "study_id": study_id,
             "label": label,
             "status": reviews[study_id]["status"],
             "updated_at": reviews[study_id]["updated_at"],
         }
+        self._write_audit_log(
+            account=account,
+            study_id=study_id,
+            action="study_review_submitted",
+            target_type="review",
+            target_id=study_id,
+            details={"label": label, "status": review_status},
+        )
+        return result

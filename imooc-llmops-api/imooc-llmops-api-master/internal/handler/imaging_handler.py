@@ -39,6 +39,35 @@ class ImagingHandler:
         return success_json(self.imaging_service.get_study_detail(study_id, current_user))
 
     @login_required
+    def upload_dicom(self):
+        payload = request.get_json(silent=True) or {}
+        return success_json(self.imaging_service.upload_dicom(payload, current_user))
+
+    @login_required
+    def create_analysis_task(self, study_id: str):
+        return success_json(self.imaging_service.create_analysis_task(study_id, current_user))
+
+    @login_required
+    def get_analysis_result(self, study_id: str):
+        return success_json(self.imaging_service.get_analysis_result(study_id, current_user))
+
+    @login_required
+    def get_structured_findings(self, study_id: str):
+        return success_json(self.imaging_service.get_structured_findings(study_id, current_user))
+
+    @login_required
+    def get_audit_logs(self, study_id: str):
+        return success_json(self.imaging_service.get_audit_logs(study_id, current_user))
+
+    @login_required
+    def get_review_logs(self, study_id: str):
+        return success_json(self.imaging_service.get_review_logs(study_id, current_user))
+
+    @login_required
+    def get_feedback_stats(self, study_id: str):
+        return success_json(self.imaging_service.get_feedback_stats(study_id, current_user))
+
+    @login_required
     def save_report_draft(self, study_id: str):
         payload = request.get_json(silent=True) or {}
         content = str(payload.get("content", "")).strip()

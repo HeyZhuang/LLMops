@@ -2,24 +2,31 @@
 import moment from 'moment'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useImagingReviewActions, useImagingStudyDetail } from '@/hooks/use-imaging'
+import { useImagingAudit, useImagingReviewActions, useImagingStudyDetail } from '@/hooks/use-imaging'
 
 const route = useRoute()
 const { loading, study, loadImagingStudyDetail } = useImagingStudyDetail()
 const { saving, handleSaveDraft, handleSubmitReview } = useImagingReviewActions()
+const { loading: auditLoading, auditLogs, reviewLogs, feedbackStats, loadImagingAudit } = useImagingAudit()
 
 const studyId = computed(() => String(route.params.study_id ?? ''))
 const draftContent = ref('')
 const reviewComment = ref('')
 
 const statusMap: Record<string, string> = {
-  ready: '已完成 AI 处理',
-  processing: '处理中',
+  awaiting_ai: '等待 AI 处理',
+  ai_completed: 'AI 已完成',
+  doctor_review: '待医生审核',
+  doctor_reviewed: '医生已审核',
+  doctor_revision_needed: '待医生修订',
+  doctor_rejected: '医生已驳回',
 }
 
 const reportStatusMap: Record<string, string> = {
   pending: '待生成',
+  pending_draft: '待起草',
   draft_ready: '草稿待审',
+  doctor_editing: '医生修订中',
   signed: '已签发',
 }
 
@@ -29,10 +36,16 @@ const reviewLabelMap: Record<string, string> = {
   rejected: '驳回',
 }
 
+const auditActionMap: Record<string, string> = {
+  study_detail_viewed: '查看检查详情',
+  report_draft_saved: '保存报告草稿',
+  study_review_submitted: '提交医生审核',
+}
+
 const refreshStudy = async () => {
-  if (studyId.value) {
-    await loadImagingStudyDetail(studyId.value)
-  }
+  if (!studyId.value) return
+  await loadImagingStudyDetail(studyId.value)
+  await loadImagingAudit(studyId.value)
 }
 
 const saveDraft = async () => {
@@ -69,10 +82,12 @@ watch(
 </script>
 
 <template>
-  <a-spin :loading="loading" class="block h-full">
+  <a-spin :loading="loading || auditLoading" class="block h-full">
     <div class="min-h-full overflow-auto px-6 py-6">
       <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div class="rounded-[28px] border border-[#d7e0dc] bg-[linear-gradient(135deg,#f8fbf9_0%,#edf4f0_42%,#f7f1e6_100%)] p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+        <div
+          class="rounded-[28px] border border-[#d7e0dc] bg-[linear-gradient(135deg,#f8fbf9_0%,#edf4f0_42%,#f7f1e6_100%)] p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+        >
           <div class="flex flex-wrap items-center gap-2">
             <router-link
               to="/space/imaging/studies"
@@ -141,7 +156,8 @@ watch(
             <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">报告草稿</div>
             <h2 class="mt-2 text-2xl font-bold text-[#17382d]">{{ study.report_draft.template_name }}</h2>
             <div class="mt-2 text-sm text-[#5d746b]">
-              {{ study.report_draft.template_version }} / {{ reportStatusMap[study.report_draft.status] || study.report_draft.status }}
+              {{ study.report_draft.template_version }} /
+              {{ reportStatusMap[study.report_draft.status] || study.report_draft.status }}
             </div>
             <a-textarea
               v-model="draftContent"
@@ -205,6 +221,81 @@ watch(
               <a-button type="primary" status="danger" :loading="saving" @click="submitReview('rejected')">
                 驳回草稿
               </a-button>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-[#d3ddd7] bg-white/92 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">审核统计</div>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl bg-[#f5f8f6] px-4 py-3">
+                <div class="text-xs text-[#6c8a7f]">总审核数</div>
+                <div class="mt-2 text-xl font-bold text-[#17382d]">{{ feedbackStats.total_reviews }}</div>
+              </div>
+              <div class="rounded-2xl bg-[#f5f8f6] px-4 py-3">
+                <div class="text-xs text-[#6c8a7f]">通过率</div>
+                <div class="mt-2 text-xl font-bold text-[#17382d]">{{ feedbackStats.approval_rate }}%</div>
+              </div>
+              <div class="rounded-2xl bg-[#f5f8f6] px-4 py-3">
+                <div class="text-xs text-[#6c8a7f]">通过</div>
+                <div class="mt-2 text-xl font-bold text-[#17382d]">{{ feedbackStats.approved }}</div>
+              </div>
+              <div class="rounded-2xl bg-[#f5f8f6] px-4 py-3">
+                <div class="text-xs text-[#6c8a7f]">需修改 / 驳回</div>
+                <div class="mt-2 text-xl font-bold text-[#17382d]">
+                  {{ feedbackStats.needs_revision + feedbackStats.rejected }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-[#d3ddd7] bg-white/92 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">审核日志</div>
+            <div class="mt-4 grid gap-3">
+              <div
+                v-for="item in reviewLogs"
+                :key="item.id"
+                class="rounded-2xl bg-[#f5f8f6] px-4 py-3"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-sm font-semibold text-[#17382d]">
+                    {{ reviewLabelMap[item.label] || item.label }}
+                  </div>
+                  <div class="text-xs text-[#5d746b]">
+                    {{ moment(item.created_at * 1000).format('MM-DD HH:mm') }}
+                  </div>
+                </div>
+                <div class="mt-1 text-xs text-[#5d746b]">状态：{{ statusMap[item.status] || item.status }}</div>
+                <div v-if="item.comment" class="mt-2 text-sm text-[#355346]">{{ item.comment }}</div>
+              </div>
+              <div v-if="!reviewLogs.length" class="rounded-2xl bg-[#f5f8f6] px-4 py-3 text-sm text-[#5d746b]">
+                暂无审核日志
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-[#d3ddd7] bg-white/92 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">访问日志</div>
+            <div class="mt-4 grid gap-3">
+              <div
+                v-for="item in auditLogs"
+                :key="item.id"
+                class="rounded-2xl bg-[#f5f8f6] px-4 py-3"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-sm font-semibold text-[#17382d]">
+                    {{ auditActionMap[item.action] || item.action }}
+                  </div>
+                  <div class="text-xs text-[#5d746b]">
+                    {{ moment(item.created_at * 1000).format('MM-DD HH:mm:ss') }}
+                  </div>
+                </div>
+                <div class="mt-1 text-xs text-[#5d746b]">
+                  目标：{{ item.target_type }} / {{ item.success ? '成功' : '失败' }}
+                </div>
+              </div>
+              <div v-if="!auditLogs.length" class="rounded-2xl bg-[#f5f8f6] px-4 py-3 text-sm text-[#5d746b]">
+                暂无访问日志
+              </div>
             </div>
           </div>
         </div>

@@ -103,9 +103,46 @@ class Router:
             view_func=self.imaging_handler.get_studies,
         )
         bp.add_url_rule(
+            "/imaging/upload-dicom",
+            methods=["POST"],
+            endpoint="imaging_upload_dicom",
+            view_func=self.imaging_handler.upload_dicom,
+        )
+        bp.add_url_rule(
             "/imaging/studies/<string:study_id>",
             endpoint="imaging_get_study_detail",
             view_func=self.imaging_handler.get_study_detail,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/analysis-tasks",
+            methods=["POST"],
+            endpoint="imaging_create_analysis_task",
+            view_func=self.imaging_handler.create_analysis_task,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/analysis-result",
+            endpoint="imaging_get_analysis_result",
+            view_func=self.imaging_handler.get_analysis_result,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/structured-findings",
+            endpoint="imaging_get_structured_findings",
+            view_func=self.imaging_handler.get_structured_findings,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/audit-logs",
+            endpoint="imaging_get_audit_logs",
+            view_func=self.imaging_handler.get_audit_logs,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/review-logs",
+            endpoint="imaging_get_review_logs",
+            view_func=self.imaging_handler.get_review_logs,
+        )
+        bp.add_url_rule(
+            "/imaging/studies/<string:study_id>/feedback-stats",
+            endpoint="imaging_get_feedback_stats",
+            view_func=self.imaging_handler.get_feedback_stats,
         )
         bp.add_url_rule(
             "/imaging/studies/<string:study_id>/report-draft",

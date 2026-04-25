@@ -1,20 +1,29 @@
 import { onMounted, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import {
+  createImagingAnalysisTask,
+  getImagingAuditLogs,
+  getImagingFeedbackStats,
   getImagingMvpTasks,
   getImagingOverview,
+  getImagingReviewLogs,
   getImagingStudyDetail,
   getImagingStudies,
   getImagingWorkflowTemplates,
   saveImagingReportDraft,
   submitImagingReview,
+  uploadImagingDicom,
 } from '@/services/imaging'
 import type {
+  ImagingAuditLog,
+  ImagingFeedbackStats,
   ImagingMvpTask,
   ImagingPlanningOverview,
+  ImagingReviewLog,
   ImagingStudy,
   ImagingStudyDetail,
   ImagingWorkflowTemplate,
+  UploadImagingDicomRequest,
 } from '@/models/imaging'
 
 const createDefaultOverview = (): ImagingPlanningOverview => ({
@@ -65,6 +74,14 @@ const createDefaultStudyDetail = (): ImagingStudyDetail => ({
     comment: '',
     updated_at: 0,
   },
+})
+
+const createDefaultFeedbackStats = (): ImagingFeedbackStats => ({
+  total_reviews: 0,
+  approved: 0,
+  needs_revision: 0,
+  rejected: 0,
+  approval_rate: 0,
 })
 
 export const useImagingPlanning = () => {
@@ -148,6 +165,37 @@ export const useImagingStudyDetail = () => {
   }
 }
 
+export const useImagingAudit = () => {
+  const loading = ref(false)
+  const auditLogs = ref<ImagingAuditLog[]>([])
+  const reviewLogs = ref<ImagingReviewLog[]>([])
+  const feedbackStats = ref<ImagingFeedbackStats>(createDefaultFeedbackStats())
+
+  const loadImagingAudit = async (studyId: string) => {
+    try {
+      loading.value = true
+      const [auditResp, reviewResp, feedbackResp] = await Promise.all([
+        getImagingAuditLogs(studyId),
+        getImagingReviewLogs(studyId),
+        getImagingFeedbackStats(studyId),
+      ])
+      auditLogs.value = auditResp.data
+      reviewLogs.value = reviewResp.data
+      feedbackStats.value = feedbackResp.data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    loading,
+    auditLogs,
+    reviewLogs,
+    feedbackStats,
+    loadImagingAudit,
+  }
+}
+
 export const useImagingReviewActions = () => {
   const saving = ref(false)
 
@@ -175,5 +223,37 @@ export const useImagingReviewActions = () => {
     saving,
     handleSaveDraft,
     handleSubmitReview,
+  }
+}
+
+export const useImagingStudyActions = () => {
+  const submitting = ref(false)
+
+  const handleUploadDicom = async (payload: UploadImagingDicomRequest) => {
+    try {
+      submitting.value = true
+      const resp = await uploadImagingDicom(payload)
+      Message.success('检查已上传并进入待处理队列')
+      return resp.data
+    } finally {
+      submitting.value = false
+    }
+  }
+
+  const handleCreateAnalysisTask = async (studyId: string) => {
+    try {
+      submitting.value = true
+      const resp = await createImagingAnalysisTask(studyId)
+      Message.success('分析任务已创建')
+      return resp.data
+    } finally {
+      submitting.value = false
+    }
+  }
+
+  return {
+    submitting,
+    handleUploadDicom,
+    handleCreateAnalysisTask,
   }
 }
