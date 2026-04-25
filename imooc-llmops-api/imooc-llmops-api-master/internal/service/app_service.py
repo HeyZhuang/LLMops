@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 @Time    : 2025/4/6 15:28
@@ -91,7 +91,9 @@ class AppService(BaseService):
         return app.account_id == account.id or is_shared_medical_owner(app.account_id)
 
     def _get_owned_app(self, app_id: UUID, account: Account) -> App:
-        app = self._get_owned_app(app_id, account)
+        app = self.get(App, app_id)
+        if not app:
+            raise NotFoundException("该应用不存在，请核实后重试")
         if not self._can_access_app(app, account):
             raise ForbiddenException("共享应用为只读，如需修改请先复制到自己的空间")
         return app

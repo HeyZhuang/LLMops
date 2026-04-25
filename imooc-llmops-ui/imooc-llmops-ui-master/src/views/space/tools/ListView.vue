@@ -15,6 +15,51 @@ import moment from 'moment/moment'
 import { typeMap } from '@/config'
 import { type FileItem, Form, type ValidatedError } from '@arco-design/web-vue'
 
+const normalizeOpenapiSchemaString = (schemaText: string, fallbackDescription: string = '') => {
+  try {
+    const parsed = JSON.parse(schemaText)
+    if (!parsed || typeof parsed !== 'object') return schemaText
+
+    const nextSchema = { ...parsed } as Record<string, any>
+    const normalizedFallbackDescription = fallbackDescription.trim() || 'API工具提供者'
+
+    if (
+      (typeof nextSchema.server !== 'string' || nextSchema.server.trim() === '') &&
+      Array.isArray(nextSchema.servers)
+    ) {
+      const fallbackServer = nextSchema.servers.find(
+        (item: Record<string, any>) => item && typeof item.url === 'string' && item.url.trim() !== '',
+      )?.url
+
+      if (fallbackServer) {
+        nextSchema.server = fallbackServer
+      }
+    }
+
+    if (typeof nextSchema.description !== 'string' || nextSchema.description.trim() === '') {
+      if (
+        nextSchema.info &&
+        typeof nextSchema.info.description === 'string' &&
+        nextSchema.info.description.trim() !== ''
+      ) {
+        nextSchema.description = nextSchema.info.description
+      } else if (
+        nextSchema.info &&
+        typeof nextSchema.info.title === 'string' &&
+        nextSchema.info.title.trim() !== ''
+      ) {
+        nextSchema.description = nextSchema.info.title
+      } else if (normalizedFallbackDescription !== '') {
+        nextSchema.description = normalizedFallbackDescription
+      }
+    }
+
+    return JSON.stringify(nextSchema, null, 2)
+  } catch {
+    return schemaText
+  }
+}
+
 // 1.定义额面所需数据
 const route = useRoute()
 const props = defineProps({
@@ -64,7 +109,9 @@ const tools = computed(() => {
   try {
     // 1.解析openapi_schema数据
     const available_tools = []
-    const openapi_schema = JSON.parse(form.value.openapi_schema)
+    const openapi_schema = JSON.parse(
+      normalizeOpenapiSchemaString(form.value.openapi_schema, form.value.name),
+    )
 
     // 2.检测是否存在paths路径
     if ('paths' in openapi_schema) {
@@ -118,7 +165,10 @@ const handleUpdate = async () => {
   form.value.fileList = [{ uid: '1', name: '插件图标', url: api_tool_provider.value.icon }]
   form.value.icon = api_tool_provider.value.icon
   form.value.name = api_tool_provider.value.name
-  form.value.openapi_schema = api_tool_provider.value.openapi_schema
+  form.value.openapi_schema = normalizeOpenapiSchemaString(
+    api_tool_provider.value.openapi_schema,
+    api_tool_provider.value.name,
+  )
   form.value.headers = api_tool_provider.value.headers
 
   showUpdateModal.value = true
@@ -182,6 +232,39 @@ const handleCancel = () => {
 }
 
 // 页面DOM加载完毕初始化数据
+const handleNormalizedSubmit = async ({
+  values,
+  errors,
+}: {
+  values: Record<string, any>
+  errors: Record<string, ValidatedError> | undefined
+}) => {
+  if (errors) return
+
+  const normalizedValues = {
+    ...values,
+    openapi_schema: normalizeOpenapiSchemaString(
+      String(values.openapi_schema ?? ''),
+      String(values.name ?? ''),
+    ),
+  }
+
+  form.value.openapi_schema = normalizedValues.openapi_schema
+
+  if (props.createType === 'tool') {
+    await handleCreateApiToolProvider(normalizedValues as CreateApiToolProviderRequest)
+  } else if (showUpdateModal.value) {
+    await handleUpdateApiToolProvider(
+      api_tool_providers.value[showIdx.value]['id'],
+      normalizedValues as CreateApiToolProviderRequest,
+    )
+  }
+
+  handleCancel()
+  showIdx.value = -1
+  await loadApiToolProviders(true, String(route.query?.search_word ?? ''))
+}
+
 onMounted(() => loadApiToolProviders(true, String(route.query?.search_word ?? '')))
 
 // 监听路由query变化
@@ -370,7 +453,7 @@ watch(
       </div>
       <!-- 中间表单 -->
       <div class="pt-6">
-        <a-form ref="formRef" :model="form" @submit="handleSubmit" layout="vertical">
+        <a-form ref="formRef" :model="form" @submit="handleNormalizedSubmit" layout="vertical">
           <a-form-item
             field="fileList"
             hide-label
@@ -432,6 +515,10 @@ watch(
                 () => {
                   if (form.openapi_schema.trim() !== '') {
                     // 调用验证openapi_schema接口
+                    form.openapi_schema = normalizeOpenapiSchemaString(
+                      form.openapi_schema,
+                      form.name,
+                    )
                     handleValidateOpenAPISchema(form.openapi_schema)
                   }
                 }

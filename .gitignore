@@ -33,3 +33,6 @@ Thumbs.db
 *.pfx
 id_rsa*
 credentials.json
+
+# Local storage
+storage/
