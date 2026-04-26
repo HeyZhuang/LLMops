@@ -23,8 +23,8 @@ class EmailService:
         expire_minutes = max(1, expire_seconds // 60)
         subject = "LLMOps 注册验证码"
         content = (
-            "您好，\n\n"
-            f"您的 LLMOps 注册验证码为：{code}\n"
+            "您好，欢迎体验帅壮壮的超级agent网站\n\n"
+            f"您的注册验证码为：{code}\n"
             f"验证码将在 {expire_minutes} 分钟后失效，请尽快完成注册。\n\n"
             "如果这不是您的操作，请忽略本邮件。"
         )
