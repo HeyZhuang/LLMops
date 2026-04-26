@@ -1,228 +1,125 @@
-<div align="center">
+# LLMOps Platform (Agent / RAG / Workflow)
 
-# 🚀 LLMOps Platform
+面向 Agent 开发岗与 AI 研发岗的作品集项目：一个企业级 LLM 应用开发与运维平台，覆盖从「模型接入、工具集成、知识库、工作流编排、发布与监控」的全链路能力。
 
-**企业级大语言模型应用开发与运维平台**
+前后端分离：后端 Flask + 前端 Vue 3（TypeScript）。
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Vue](https://img.shields.io/badge/Vue-3.4+-green.svg)](https://vuejs.org/)
-[![Flask](https://img.shields.io/badge/Flask-3.0+-red.svg)](https://flask.palletsprojects.com/)
-[![LangChain](https://img.shields.io/badge/LangChain-0.2+-purple.svg)](https://langchain.com/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+> UI 场景 Demo：医脉天枢（医疗多智能体会诊/随访/影像分析等）。平台能力本身与行业无关，可复用到通用业务。
 
-**快速构建、部署和管理AI智能体应用的完整解决方案**
+## 截图预览
 
-[功能特性](#-核心功能) • [技术架构](#-技术架构) • [快速开始](#-快速开始) • [项目结构](#-项目结构) • [面试重点](#-面试重点)
+| 应用与编排 | 工作流可视化与调试 |
+|---|---|
+| ![Apps](./pic/readme/02-apps.png) | ![Workflow Designer](./pic/readme/05-workflow-designer.png) |
 
-</div>
+| 应用编辑器（多智能体/工具/工作流/知识库/记忆） | 用量与成本分析 |
+|---|---|
+| ![App Editor](./pic/readme/06-app-editor.png) | ![Analytics](./pic/readme/07-analytics.png) |
 
----
+| 知识库文档管理 | 技能库与 Prompt 模板 |
+|---|---|
+| ![Dataset Docs](./pic/readme/08-dataset-docs.png) | ![Skills](./pic/readme/03-skills.png) |
 
-## 📖 项目简介
+| WebApp 发布 | 影像任务（DICOM 上传与分析结果） |
+|---|---|
+| ![Publish](./pic/readme/10-publish.png) | ![Imaging](./pic/readme/09-imaging.png) |
 
-LLMOps Platform 是一个**企业级大语言模型应用开发与运维平台**，基于现代化微服务架构设计，提供从AI应用创建、知识库管理、工作流编排到API集成的全链路解决方案。该项目展示了完整的LLMOps工程实践，适合作为学习和面试的技术参考。
+## 我实现了什么（面试官关心的点）
 
-### ✨ 项目亮点
+- Agent 应用：ReAct / Function Calling，支持 SSE 流式输出与事件可视化，支持长记忆与会话管理。
+- 多智能体协作：Supervisor 根据任务意图分发子 Agent，支持把「技能、工具、工作流、知识库」组合成可复用的应用能力。
+- 工作流编排：基于 Vue Flow 的拖拽式 DAG 设计器，支持节点配置、变量引用、在线调试与结果面板展示（耗时、token 等）。
+- 知识库（RAG）：文档上传与解析、分段与启停控制；混合检索（Weaviate 向量检索 + 关键词检索 + 重排序）。
+- 工具与技能：内置工具 + OpenAPI 3.0 动态生成工具；技能库、Prompt 模板库用于沉淀“可复制的能力”。
+- 发布与监控：WebApp 发布链接；会话反馈；token 吞吐与成本统计分析。
+- 业务示例：影像模块支持 DICOM 上传、任务编排与结构化发现展示，用于展示多模态业务落地路径。
 
-- 🎯 **生产级架构**：采用分层架构 + 依赖注入，代码结构清晰，易于维护和扩展
-- 🔧 **多模型集成**：统一接口管理OpenAI、百度千帆、Ollama等多种LLM提供商
-- 🚀 **工作流引擎**：基于LangGraph的可视化工作流编排，支持复杂业务逻辑
-- 📊 **智能检索**：FAISS向量数据库 + BM25混合检索，提供高精度知识库问答
-- 🔌 **插件化设计**：支持自定义工具和API集成，具备良好的扩展性
-- 💾 **异步处理**：Celery异步任务队列，处理文档解析、向量化等耗时操作
-- 🔐 **企业级安全**：JWT认证 + RBAC权限控制，支持多租户管理
+## 后端架构速览
 
----
+后端采用「三层分层架构 + 依赖注入（injector）」：Router/Handler/Service/Model 分离，便于扩展与测试。
 
-## 🎯 核心功能
+- 双蓝图认证：`llmops` 蓝图使用 JWT Bearer Token；`openapi` 蓝图使用 API Key。
+- Schema 验证：请求使用 WTForms；响应序列化使用 Marshmallow。
+- 异步任务：Celery + Redis（用于文档解析、向量化等耗时任务）。
 
-### 1. 🤖 AI智能体应用（Agent）
-- **ReACT模式**：基于推理-行动循环的智能体架构
-- **多模型支持**：OpenAI GPT-4、百度千帆、Ollama本地模型
-- **工具调用**：支持函数调用和外部API集成
-- **长期记忆**：基于摘要的对话记忆机制
-- **流式输出**：支持实时流式响应，提升用户体验
-
-### 2. 📚 知识库管理（Dataset）
-- **多格式支持**：PDF、Word、Excel、Markdown、TXT等
-- **智能分块**：基于语义的文档分块策略，优化检索效果
-- **混合检索**：FAISS向量检索 + BM25关键词检索
-- **重排序**：使用Cross-Encoder对检索结果重排序
-- **增量更新**：支持知识库的增量更新和版本管理
-
-### 3. 🔄 工作流编排（Workflow）
-- **可视化设计**：基于Vue Flow的拖拽式工作流设计器
-- **丰富节点类型**：
-  - LLM节点：大语言模型调用
-  - 代码执行节点：Python代码执行
-  - HTTP请求节点：外部API调用
-  - 知识库检索节点：向量检索
-  - 条件判断节点：流程控制
-- **变量系统**：支持节点间数据传递和变量管理
-- **错误处理**：完善的异常处理和重试机制
-
-### 4. 🛠️ 工具集成（Tools）
-- **内置工具**：计算器、天气查询、代码执行器
-- **API工具**：支持OpenAPI 3.0规范的第三方API
-- **自定义工具**：灵活的插件机制，支持Python函数封装
-- **工具链**：支持多个工具的组合调用
-
-### 5. 💬 对话管理（Conversation）
-- **会话持久化**：完整的对话历史存储
-- **上下文管理**：智能的上下文窗口管理
-- **多轮对话**：支持复杂的多轮交互
-- **思维链可视化**：展示Agent的推理过程
-
-### 6. 📊 数据分析（Analysis）
-- **实时监控**：API调用量、响应时间、错误率
-- **成本分析**：Token消耗统计和成本计算
-- **用户行为**：用户活跃度和使用模式分析
-- **可视化报表**：基于ECharts的数据可视化
-
----
-
-## 🏗️ 技术架构
-
-### 核心技术栈
-
-#### 后端技术栈
-| 技术 | 版本 | 用途 | 特点 |
-|------|------|------|------|
-| **Python** | 3.8+ | 核心开发语言 | 丰富的AI生态 |
-| **Flask** | 3.0+ | Web框架 | 轻量级、灵活 |
-| **SQLAlchemy** | 2.0+ | ORM框架 | 支持异步操作 |
-| **PostgreSQL** | 12+ | 关系型数据库 | 高性能、可扩展 |
-| **Redis** | 6+ | 缓存/消息队列 | 高性能内存数据库 |
-| **Celery** | 5.3+ | 异步任务处理 | 分布式任务队列 |
-| **LangChain** | 0.2+ | LLM应用框架 | 丰富的LLM集成 |
-| **LangGraph** | 0.2+ | 工作流编排 | 状态图工作流 |
-| **FAISS** | - | 向量数据库 | Facebook开源，高性能 |
-| **Weaviate** | 1.23.7 | 向量数据库 | 云原生向量数据库 |
-
-#### 前端技术栈
-| 技术 | 版本 | 用途 | 特点 |
-|------|------|------|------|
-| **Vue 3** | 3.4+ | 前端框架 | Composition API |
-| **TypeScript** | 5.4+ | 类型系统 | 类型安全 |
-| **Vite** | 5.2+ | 构建工具 | 快速热重载 |
-| **Pinia** | 2.1+ | 状态管理 | Vue 3官方推荐 |
-| **Tailwind CSS** | 3.4+ | 样式框架 | 原子化CSS |
-| **Arco Design** | 2.55+ | UI组件库 | 字节跳动开源 |
-| **Vue Flow** | 1.41+ | 工作流可视化 | 基于React Flow |
-| **ECharts** | 5.6+ | 数据可视化 | Apache开源 |
-
-### 系统架构图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    前端层 (Vue 3 + TypeScript)               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │  应用管理 │  │ 知识库   │  │  工作流  │  │  数据分析 │   │
-│  │  Agent   │  │ Dataset  │  │ Workflow │  │ Analysis │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │ RESTful API (JWT认证)
-┌─────────────────────────────────────────────────────────────┐
-│                   API网关层 (Flask + 中间件)                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   认证   │  │   限流   │  │   日志   │  │   CORS   │   │
-│  │   Auth   │  │RateLimit │  │ Logging  │  │   CORS   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                 业务逻辑层 (分层架构 + DI)                     │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Handler  │  │ Service  │  │  Model   │  │  Schema  │   │
-│  │ 控制器   │  │ 业务逻辑 │  │ 数据模型 │  │ 数据验证 │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                     核心能力层 (LangChain生态)                │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │  Agent   │  │ Workflow │  │ Retrieval│  │  Tools   │   │
-│  │ 智能体   │  │ 工作流   │  │  检索器  │  │  工具集  │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   LLM    │  │Embeddings│  │  Memory  │  │ FileExt  │   │
-│  │ 语言模型 │  │ 向量化   │  │  记忆    │  │ 文件解析 │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                   异步任务层 (Celery)                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ 文档解析 │  │ 向量化   │  │ 模型调用 │  │ 数据同步 │   │
-│  │   Task   │  │   Task   │  │   Task   │  │   Task   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                     数据存储层                                │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │PostgreSQL│  │  Redis   │  │ Weaviate │  │   COS    │   │
-│  │ 关系数据 │  │   缓存   │  │ 向量数据 │  │ 对象存储 │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  U["Client (Vue 3)"] -->|"REST / SSE"| API["Flask API"]
+  API --> MW["Middleware (Auth)"]
+  MW --> H["Handler"]
+  H --> S["Service"]
+  S --> M["Model (SQLAlchemy)"]
+  M --> PG["PostgreSQL"]
+  S --> R["Redis (cache / celery)"]
+  S --> WV["Weaviate (vector store)"]
+  S --> LLM["LLM Providers"]
+  S --> T["Tools / OpenAPI Tools"]
 ```
 
-### 核心设计模式
+## 技术栈
 
-#### 1. 依赖注入（Dependency Injection）
-```python
-# 使用injector实现依赖注入
-from injector import inject, singleton
+- 后端：Python（推荐 3.11）、Flask、SQLAlchemy、Injector、Celery、Redis、PostgreSQL、Weaviate、LangChain/LangGraph。
+- 前端：Vue 3、TypeScript、Vite、Pinia、Arco Design、Tailwind CSS、Vue Flow、ECharts、Fetch + SSE。
+- 部署：Docker Compose，生产部署与 Nginx 反代配置见 [DEPLOY_DOCKER.md](./DEPLOY_DOCKER.md)。
 
-@singleton
-class AppService:
-    @inject
-    def __init__(self, app_repo: AppRepository):
-        self.app_repo = app_repo
-```
+## 本地启动（推荐开发模式）
 
-#### 2. 策略模式（Strategy Pattern）
-```python
-# LLM提供商策略
-class LanguageModelManager:
-    def get_model(self, provider: str, model_name: str):
-        strategy = self._get_strategy(provider)
-        return strategy.create_model(model_name)
-```
+更完整的启动说明见 [STARTUP_GUIDE.md](./STARTUP_GUIDE.md)。
 
-#### 3. 工厂模式（Factory Pattern）
-```python
-# 工作流节点工厂
-class NodeFactory:
-    @staticmethod
-    def create_node(node_type: str, config: dict):
-        return NODE_REGISTRY[node_type](config)
-```
+如果你在 Windows 上做本地开发，也可以直接使用仓库根目录脚本：`start-local.bat`（本地 PG/Redis + Docker 仅 Weaviate）或 `start-all.bat`（完整栈）。
 
-#### 4. 观察者模式（Observer Pattern）
-```python
-# Celery任务状态监听
-@celery.task(bind=True)
-def process_document(self, document_id):
-    # 任务状态更新通知
-    self.update_state(state='PROGRESS', meta={'progress': 50})
-```
-
----
-
-## 🚀 快速开始
-
-### 环境要求
-
-- **Python**: 3.8+
-- **Node.js**: 16+
-- **PostgreSQL**: 12+
-- **Redis**: 6+
-- **Docker**: 20.10+
-
-### 一键启动（推荐）
+1. 启动 Weaviate（Docker）
 
 ```bash
-# 克隆项目
-git clone https://github.com/your-username/ll
+cd docker/docker
+docker-compose -f docker-compose-weaviate-only.yaml up -d
+```
+
+2. 启动后端（Flask）
+
+```powershell
+cd imooc-llmops-api/imooc-llmops-api-master
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python init_db.py
+python create_user.py
+python -m app.http.app
+```
+
+3. 启动 Celery（另开终端）
+
+```powershell
+cd imooc-llmops-api/imooc-llmops-api-master
+celery -A app.celery worker --loglevel=info --pool=solo
+```
+
+4. 启动前端（Vue）
+
+```bash
+cd imooc-llmops-ui/imooc-llmops-ui-master
+npm install
+npm run dev
+```
+
+服务默认地址：前端 `http://localhost:5173`，后端 `http://localhost:5000`，Weaviate `http://localhost:8080`。
+
+## 项目结构
+
+```text
+LLMops/
+  imooc-llmops-api/imooc-llmops-api-master/    # 后端（Flask）
+  imooc-llmops-ui/imooc-llmops-ui-master/      # 前端（Vue 3 + TS）
+  docker/docker/                               # Docker 编排（Weaviate 等）
+  docs/                                        # 文档
+  pic/                                         # 截图与素材
+```
+
+## 面试可讲的技术点（建议 60 秒讲清）
+
+- LLM 能力工程化：模型提供商统一接入、SSE 流式输出协议与前端解析、对话记忆与会话管理。
+- Agent 架构：基于 LangGraph 的状态图编译，事件队列管理（thought/action/message），可中断与可观测。
+- 工作流平台化：可视化 DAG 设计器、节点类型扩展、变量系统、调试与发布。
+- RAG 工程：文档解析与切分、混合检索、过滤与重排序、索引更新与可用性开关。
+- 生产化考虑：双蓝图认证、异步任务、对象存储/向量库/关系库分层、token 成本分析与反馈闭环。
