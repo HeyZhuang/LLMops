@@ -663,10 +663,12 @@ onMounted(async () => {
                 <a-dropdown
                   trigger="hover"
                   @select="
-                    (value: string | number) => {
+                    (value: string | number | Record<string, any> | undefined) => {
                       // 调整视口大小并更新视口等级
                       zoomLevel = Number(value)
-                      instance.zoomTo(value)
+                      if (typeof value !== 'string' && typeof value !== 'number') return
+                      zoomLevel = Number(value)
+                      instance.zoomTo(Number(value))
                     }
                   "
                 >
