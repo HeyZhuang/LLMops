@@ -46,6 +46,8 @@ services:
     build:
       context: ./imooc-llmops-api/imooc-llmops-api-master
       dockerfile: Dockerfile
+      args:
+        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
     container_name: llmops-api
     restart: always
     env_file:
@@ -63,6 +65,8 @@ services:
     build:
       context: ./imooc-llmops-api/imooc-llmops-api-master
       dockerfile: Dockerfile
+      args:
+        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
     container_name: llmops-celery
     restart: always
     env_file:

@@ -7,14 +7,17 @@ WORKDIR /app
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
+# 默认使用国内 APT 镜像（可通过构建参数覆盖，例如：--build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn）
+ARG APT_MIRROR=mirrors.aliyun.com
+
 # 【优化 1：替换 Debian 系统源为阿里云镜像】
 # 忽略报错以兼容不同版本的 Debian 配置文件格式
-RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
-    && sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
-    && sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list 2>/dev/null || true \
-    && sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list 2>/dev/null || true \
+RUN sed -i "s/deb.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+    && sed -i "s/security.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+    && sed -i "s/deb.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list 2>/dev/null || true \
+    && sed -i "s/security.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list 2>/dev/null || true \
     && apt-get update \
-    && apt-get install -y gcc g++ \
+    && apt-get install -y --no-install-recommends gcc g++ libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
