@@ -20,6 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 
 from internal.extension.database_extension import db
+from .account import Account
 from .app import AppDatasetJoin
 from .upload_file import UploadFile
 
@@ -43,6 +44,10 @@ class Dataset(db.Model):
         server_onupdate=text('CURRENT_TIMESTAMP(0)'),
     )
     created_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP(0)'))
+
+    @property
+    def account(self) -> "Account | None":
+        return db.session.get(Account, self.account_id)
 
     @property
     def document_count(self) -> int:

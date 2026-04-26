@@ -49,6 +49,18 @@ class WorkflowService(BaseService):
     db: SQLAlchemy
     builtin_provider_manager: BuiltinProviderManager
 
+    @staticmethod
+    def _can_access_workflow(workflow: Workflow, account: Account) -> bool:
+        return workflow.account_id == account.id or is_shared_medical_owner(workflow.account_id)
+
+    def _get_owned_workflow(self, workflow_id: UUID, account: Account) -> Workflow:
+        workflow = self.get(Workflow, workflow_id)
+        if not workflow:
+            raise NotFoundException("该工作流不存在，请核实后重试")
+        if not self._can_access_workflow(workflow, account):
+            raise ForbiddenException("共享工作流为只读，如需修改请先复制到自己的空间")
+        return workflow
+
     def create_workflow(self, req: CreateWorkflowReq, account: Account) -> Workflow:
         """根据传递的请求信息创建工作流"""
         # 1.根据传递的工作流工具名称查询工作流信息

@@ -8,6 +8,7 @@ export type GetApiToolProvidersWithPageResponse = BasePaginatorResponse<{
   description: string
   headers: Array<any>
   tools: Array<any>
+  owner_name: string
   created_at: number
 }>
 

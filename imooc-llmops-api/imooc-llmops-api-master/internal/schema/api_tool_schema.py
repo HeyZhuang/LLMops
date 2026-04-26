@@ -10,9 +10,24 @@ from marshmallow import Schema, fields, pre_dump
 from wtforms import StringField, ValidationError
 from wtforms.validators import DataRequired, Length, URL, Optional
 
-from internal.model import ApiToolProvider, ApiTool
+from internal.extension.database_extension import db
+from internal.model import ApiToolProvider, ApiTool, Account
 from pkg.paginator import PaginatorReq
 from .schema import ListField
+
+
+def _resolve_owner_name(account_id) -> str:
+    account = db.session.get(Account, account_id) if account_id else None
+    if not account:
+        return ""
+
+    if account.name and account.name.strip():
+        return account.name.strip()
+
+    if account.email and account.email.strip():
+        return account.email.split("@", 1)[0].strip()
+
+    return ""
 
 
 class ValidateOpenAPISchemaReq(FlaskForm):
@@ -134,6 +149,7 @@ class GetApiToolProvidersWithPageResp(Schema):
     description = fields.String()
     headers = fields.List(fields.Dict, dump_default=[])
     tools = fields.List(fields.Dict, dump_default=[])
+    owner_name = fields.String(dump_default="")
     created_at = fields.Integer(dump_default=0)
 
     @pre_dump
@@ -151,5 +167,6 @@ class GetApiToolProvidersWithPageResp(Schema):
                 "name": tool.name,
                 "inputs": [{k: v for k, v in parameter.items() if k != "in"} for parameter in tool.parameters]
             } for tool in tools],
+            "owner_name": _resolve_owner_name(data.account_id),
             "created_at": int(data.created_at.timestamp())
         }

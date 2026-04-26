@@ -17,9 +17,24 @@ from wtforms.validators import (
 )
 
 from internal.entity.dataset_entity import RetrievalStrategy
+from internal.extension.database_extension import db
 from internal.lib.helper import datetime_to_timestamp
-from internal.model import Dataset, DatasetQuery
+from internal.model import Dataset, DatasetQuery, Account
 from pkg.paginator import PaginatorReq
+
+
+def _resolve_owner_name(account_id) -> str:
+    account = db.session.get(Account, account_id) if account_id else None
+    if not account:
+        return ""
+
+    if account.name and account.name.strip():
+        return account.name.strip()
+
+    if account.email and account.email.strip():
+        return account.email.split("@", 1)[0].strip()
+
+    return ""
 
 
 class CreateDatasetReq(FlaskForm):
@@ -99,6 +114,7 @@ class GetDatasetsWithPageResp(Schema):
     document_count = fields.Integer(dump_default=0)
     related_app_count = fields.Integer(dump_default=0)
     character_count = fields.Integer(dump_default=0)
+    owner_name = fields.String(dump_default="")
     updated_at = fields.Integer(dump_default=0)
     created_at = fields.Integer(dump_default=0)
 
@@ -112,6 +128,7 @@ class GetDatasetsWithPageResp(Schema):
             "document_count": data.document_count,
             "related_app_count": data.related_app_count,
             "character_count": data.character_count,
+            "owner_name": _resolve_owner_name(data.account_id),
             "updated_at": int(data.updated_at.timestamp()),
             "created_at": int(data.created_at.timestamp()),
         }

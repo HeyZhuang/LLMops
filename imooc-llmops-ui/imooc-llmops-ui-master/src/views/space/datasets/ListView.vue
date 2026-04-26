@@ -160,7 +160,7 @@ onMounted(() => {
               <icon-user />
             </a-avatar>
             <div class="text-xs text-gray-400">
-              慕小课 · 最近编辑
+              {{ dataset.owner_name || '未知用户' }} · 最近编辑
               {{ moment(dataset.created_at * 1000).format('MM-DD HH:mm') }}
             </div>
           </div>

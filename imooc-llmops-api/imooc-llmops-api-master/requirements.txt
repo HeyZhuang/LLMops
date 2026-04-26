@@ -222,6 +222,7 @@ pyzmq==25.1.2
 qianfan==0.3.17.1
 rank-bm25==0.2.2
 rapidfuzz==3.9.4
+rapidocr_onnxruntime==1.4.4
 redis==5.0.8
 referencing==0.34.0
 regex>=2024.5.15
