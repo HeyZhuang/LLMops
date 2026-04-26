@@ -162,7 +162,7 @@ watch(
                 size="small"
                 :bordered="{ wrapper: false }"
                 :data="queries"
-                @row-click="(record) => (hitTestingForm.query = record.query)"
+                @row-click="(record: any) => (hitTestingForm.query = record.query)"
               >
                 <template #columns>
                   <a-table-column

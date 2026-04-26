@@ -141,7 +141,7 @@ const tools = computed(() => {
 })
 
 // 2.定义滚动分页处理器
-const handleScroll = (event: UIEvent) => {
+const handleScroll = (event: Event) => {
   // 2.1 获取滚动距离、可滚动的最大距离、客户端/浏览器窗口的高度
   const { scrollTop, scrollHeight, clientHeight } = event.target as HTMLElement
 
@@ -467,7 +467,7 @@ watch(
               v-model:file-list="form.fileList"
               image-preview
               :custom-request="
-                (option) => {
+                (option: any) => {
                   const uploadTask = async () => {
                     const { fileItem, onSuccess, onError } = option
                     await handleUploadImage(fileItem.file as File)
@@ -481,7 +481,7 @@ watch(
                 }
               "
               :on-before-remove="
-                async (fileItem) => {
+                async (fileItem: any) => {
                   form.icon = ''
                   return true
                 }

@@ -82,7 +82,7 @@ const handleUpdateOpeningQuestions = async () => {
               <a-input
                 :model-value="opening_question"
                 @update:model-value="
-                  (value) => {
+                (value: string) => {
                     const newQuestions = [...computed_opening_questions]
                     newQuestions[idx] = value
                     computed_opening_questions = newQuestions

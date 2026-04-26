@@ -68,7 +68,7 @@ const scrollToBottom = () => {
   scroller.value.scrollTop = scroller.value.scrollHeight
 }
 
-const handleScroll = async (event: UIEvent) => {
+const handleScroll = async (event: Event) => {
   const { scrollTop } = event.target as HTMLElement
   if (scrollTop <= 0 && !getAssistantAgentMessagesWithPageLoading.value) {
     saveScrollHeight()

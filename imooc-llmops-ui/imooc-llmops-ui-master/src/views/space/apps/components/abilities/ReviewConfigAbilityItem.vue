@@ -98,7 +98,7 @@ watch(
       <template #extra>
         <a-dropdown
           @select="
-            async (value) => {
+            async (value: any) => {
               if (Boolean(value) !== reviewConfigForm.enable) {
                 try {
                   // 1.表盖表单数据并确保数据同步
@@ -181,7 +181,7 @@ watch(
               show-word-limit
               :auto-size="{ minRows: 4, maxRows: 4 }"
               :word-length="
-                (value) => {
+                (value: string) => {
                   if (value.trim() === '') return 0
                   return value.split(/\r?\n/).length
                 }

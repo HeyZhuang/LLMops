@@ -35,7 +35,7 @@ const search_word = computed(() => {
 })
 
 // 2.定义滚动数据分页处理器
-const handleScroll = async (event: UIEvent) => {
+const handleScroll = async (event: Event) => {
   // 2.1 获取滚动距离、可滚动的最大距离、客户端/浏览器窗口的高度
   const { scrollTop, scrollHeight, clientHeight } = event.target as HTMLElement
 
@@ -224,7 +224,7 @@ onMounted(() => {
               v-model:file-list="form.fileList"
               image-preview
               :custom-request="
-                (option) => {
+                (option: any) => {
                   // 1.从option中获取数据
                   const { fileItem, onSuccess, onError } = option
 

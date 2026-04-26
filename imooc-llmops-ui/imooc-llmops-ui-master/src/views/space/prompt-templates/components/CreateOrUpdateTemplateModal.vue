@@ -93,7 +93,7 @@ const handleCancel = () => {
       <div>
         <div class="text-sm text-abyss-600 mb-1">
           Prompt内容 <span class="text-red-400">*</span>
-          <span class="text-abyss-300 text-xs ml-2">支持 {{变量名}} 语法</span>
+          <span v-pre class="text-abyss-300 text-xs ml-2">支持 {{变量名}} 语法</span>
         </div>
         <a-textarea
           v-model="form.content"
