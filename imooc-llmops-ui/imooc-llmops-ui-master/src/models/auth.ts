@@ -1,7 +1,12 @@
 import { type BaseResponse } from '@/models/base'
 
-// 账号密码登录响应结构
-export type PasswordLoginResponse = BaseResponse<{
+export type AuthorizationData = {
   access_token: string
   expire_at: number
-}>
+}
+
+export type PasswordLoginResponse = BaseResponse<AuthorizationData>
+
+export type RegisterResponse = BaseResponse<AuthorizationData>
+
+export type SendRegisterCodeResponse = BaseResponse<Record<string, never>>

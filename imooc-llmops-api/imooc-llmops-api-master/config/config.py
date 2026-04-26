@@ -43,6 +43,19 @@ class Config:
         self.REDIS_DB = _get_env("REDIS_DB")
         self.REDIS_USE_SSL = _get_bool_env("REDIS_USE_SSL")
 
+        # 邮件配置
+        self.SMTP_HOST = _get_env("SMTP_HOST")
+        self.SMTP_PORT = int(_get_env("SMTP_PORT"))
+        self.SMTP_USER = _get_env("SMTP_USER")
+        self.SMTP_PASSWORD = _get_env("SMTP_PASSWORD")
+        self.SMTP_USE_TLS = _get_bool_env("SMTP_USE_TLS")
+        self.SMTP_USE_SSL = _get_bool_env("SMTP_USE_SSL")
+        self.MAIL_FROM = _get_env("MAIL_FROM")
+
+        # 注册验证码配置
+        self.REGISTER_CODE_EXPIRE_SECONDS = int(_get_env("REGISTER_CODE_EXPIRE_SECONDS"))
+        self.REGISTER_CODE_RESEND_SECONDS = int(_get_env("REGISTER_CODE_RESEND_SECONDS"))
+
         # Celery配置
         self.CELERY = {
             "broker_url": f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{int(_get_env('CELERY_BROKER_DB'))}",

@@ -1,12 +1,11 @@
 import { ref } from 'vue'
-import { logout, passwordLogin } from '@/services/auth'
 import { Message } from '@arco-design/web-vue'
 
+import { logout, passwordLogin, register, sendRegisterCode } from '@/services/auth'
+
 export const useLogout = () => {
-  // 1.定义hooks所需数据
   const loading = ref(false)
 
-  // 2.定义退出登录处理器
   const handleLogout = async () => {
     try {
       loading.value = true
@@ -21,11 +20,9 @@ export const useLogout = () => {
 }
 
 export const usePasswordLogin = () => {
-  // 1.定义hooks所需数据
   const loading = ref(false)
   const authorization = ref<Record<string, any>>({})
 
-  // 2.定义账号密码处理器
   const handlePasswordLogin = async (email: string, password: string) => {
     try {
       loading.value = true
@@ -37,4 +34,38 @@ export const usePasswordLogin = () => {
   }
 
   return { loading, authorization, handlePasswordLogin }
+}
+
+export const useRegister = () => {
+  const submitLoading = ref(false)
+  const codeLoading = ref(false)
+  const authorization = ref<Record<string, any>>({})
+
+  const handleSendRegisterCode = async (email: string) => {
+    try {
+      codeLoading.value = true
+      const resp = await sendRegisterCode(email)
+      Message.success(resp.message || '验证码已发送')
+    } finally {
+      codeLoading.value = false
+    }
+  }
+
+  const handleRegister = async (name: string, email: string, code: string, password: string) => {
+    try {
+      submitLoading.value = true
+      const resp = await register(name, email, code, password)
+      authorization.value = resp.data
+    } finally {
+      submitLoading.value = false
+    }
+  }
+
+  return {
+    submitLoading,
+    codeLoading,
+    authorization,
+    handleSendRegisterCode,
+    handleRegister,
+  }
 }

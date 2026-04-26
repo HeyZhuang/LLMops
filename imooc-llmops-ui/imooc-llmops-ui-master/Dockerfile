@@ -14,8 +14,9 @@ RUN yarn install
 # 将项目代码拷贝到容器中
 COPY . .
 
-# 配置环境变量
-ENV VITE_API_PREFIX=http://localhost:5000
+# 允许在构建时注入 API 前缀，生产环境默认走反向代理
+ARG VITE_API_PREFIX=/api
+ENV VITE_API_PREFIX=${VITE_API_PREFIX}
 
 # 构建/编译项目
 RUN yarn build

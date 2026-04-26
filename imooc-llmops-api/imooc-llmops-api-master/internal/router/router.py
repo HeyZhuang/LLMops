@@ -381,6 +381,16 @@ class Router:
             view_func=self.oauth_handler.authorize,
         )
         bp.add_url_rule(
+            "/auth/send-register-code",
+            methods=["POST"],
+            view_func=self.auth_handler.send_register_code,
+        )
+        bp.add_url_rule(
+            "/auth/register",
+            methods=["POST"],
+            view_func=self.auth_handler.register,
+        )
+        bp.add_url_rule(
             "/auth/password-login",
             methods=["POST"],
             view_func=self.auth_handler.password_login,

@@ -21,6 +21,7 @@ from .conversation_service import ConversationService
 from .cos_service import CosService
 from .dataset_service import DatasetService
 from .document_service import DocumentService
+from .email_service import EmailService
 from .embeddings_service import EmbeddingsService
 from .faiss_service import FaissService
 from .indexing_service import IndexingService
@@ -56,6 +57,7 @@ __all__ = [
     "EmbeddingsService",
     "JiebaService",
     "DocumentService",
+    "EmailService",
     "IndexingService",
     "ProcessRuleService",
     "KeywordTableService",

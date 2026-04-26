@@ -24,6 +24,19 @@ DEFAULT_CONFIG = {
     "REDIS_DB": 0,
     "REDIS_USE_SSL": "False",
 
+    # 邮件配置
+    "SMTP_HOST": "",
+    "SMTP_PORT": 587,
+    "SMTP_USER": "",
+    "SMTP_PASSWORD": "",
+    "SMTP_USE_TLS": "True",
+    "SMTP_USE_SSL": "False",
+    "MAIL_FROM": "",
+
+    # 注册验证码配置
+    "REGISTER_CODE_EXPIRE_SECONDS": 300,
+    "REGISTER_CODE_RESEND_SECONDS": 60,
+
     # Celery默认配置
     "CELERY_BROKER_DB": 1,
     "CELERY_RESULT_BACKEND_DB": 1,
