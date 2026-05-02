@@ -49,6 +49,13 @@ const { handleUpdateConversationIsPinned } = useUpdateConversationIsPinned()
 const { loading: webAppChatLoading, handleWebAppChat } = useWebAppChat()
 const { loading: stopWebAppChatLoading, handleStopWebAppChat } = useStopWebAppChat()
 const { suggested_questions, handleGenerateSuggestedQuestions } = useGenerateSuggestedQuestions()
+const DEFAULT_NEW_CONVERSATION_NAME = '新建会诊'
+
+const buildConversationPreviewName = (value?: string) => {
+  const content = value?.replace(/\s+/g, ' ').trim() ?? ''
+  if (!content) return DEFAULT_NEW_CONVERSATION_NAME
+  return content.length > 24 ? `${content.slice(0, 24)}...` : content
+}
 
 // 2.定义会话计算属性，动态展示当前选中会话
 const conversation = computed(() => {
@@ -145,7 +152,7 @@ const addConversation = () => {
   if (!newConversation.value) {
     newConversation.value = {
       id: '',
-      name: '新建会诊',
+      name: DEFAULT_NEW_CONVERSATION_NAME,
       summary: '',
       created_at: 0,
     }
@@ -203,6 +210,9 @@ const handleSubmit = async () => {
   let position = 0
   const humanQuery = query.value
   query.value = ''
+  if (selectedConversationTmp === 'new_conversation' && newConversation.value) {
+    newConversation.value.name = buildConversationPreviewName(humanQuery)
+  }
 
   // 11.6 调用hooks发起请求
   const req = {
@@ -292,12 +302,7 @@ const handleSubmit = async () => {
   if (messages.value.length > 0) {
     if (selectedConversationTmp === 'new_conversation') {
       // 11.14 将newConversation填充到会话列表中
-      unpinned_conversations.value.unshift({
-        id: messages.value[0].conversation_id,
-        name: '新建会诊',
-        summary: '',
-        created_at: messages.value[0].created_at,
-      })
+      await loadWebAppConversations(String(route.params?.token))
       // 11.15 清空newConversation并修改选中
       newConversation.value = null
       if (selectedConversation.value === 'new_conversation') {

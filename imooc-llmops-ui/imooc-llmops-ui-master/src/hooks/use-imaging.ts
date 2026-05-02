@@ -399,7 +399,13 @@ export const useImagingStudyActions = () => {
     try {
       submitting.value = true
       const resp = await createImagingAnalysisTask(studyId)
-      Message.success('分析任务已创建')
+      if (resp.data.status === 'failed') {
+        Message.error(resp.data.message || '影像推理服务调用失败')
+      } else if (resp.data.message) {
+        Message.success(resp.data.message)
+      } else {
+        Message.success('分析任务已创建')
+      }
       return resp.data
     } finally {
       submitting.value = false

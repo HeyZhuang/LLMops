@@ -64,7 +64,7 @@ executing==2.0.1
 fastavro==1.9.5
 fastjsonschema==2.19.1
 filelock==3.15.4
-filemagic==1.6
+# filemagic is not used by the project and conflicts with python-magic/libmagic on Linux.
 faiss-cpu==1.13.2
 filetype==1.2.0
 Flask==3.0.2
@@ -133,7 +133,7 @@ layoutparser==0.3.4
 llvmlite==0.43.0
 loguru==0.7.2
 lxml==4.9.4
-mailbox==0.4
+# mailbox is part of the Python standard library and should not be installed from PyPI.
 Mako==1.3.2
 marisa-trie==1.2.0
 Markdown==3.6
@@ -162,7 +162,9 @@ numpy==1.26.4
 onnx==1.17.0
 onnxruntime==1.19.2
 openai==1.37.0
-opencv-python==4.10.0.84
+# Use headless OpenCV on Linux servers to avoid GUI/runtime library issues.
+opencv-python-headless==4.10.0.84; platform_system != "Windows"
+opencv-python==4.10.0.84; platform_system == "Windows"
 openpyxl==3.1.5
 ordered-set==4.1.0
 orjson==3.10.3
@@ -177,7 +179,7 @@ pdfplumber==0.11.4
 phonenumbers==8.13.40
 pickleshare==0.7.5
 pillow==10.4.0
-pillow_heif==0.18.0
+# pillow_heif is currently unused by the project and can be re-added when HEIF support is needed.
 pinecone-client==3.2.2
 pipreqs==0.5.0
 platformdirs==4.2.0
@@ -210,13 +212,13 @@ python-dateutil==2.9.0.post0
 python-docx==1.1.2
 python-dotenv==1.0.1
 python-iso639>=2024.4.27
-python-magic==0.4.27
-python-magic-bin==0.4.14
+python-magic==0.4.27; platform_system != "Windows"
+python-magic-bin==0.4.14; platform_system == "Windows"
 python-multipart==0.0.12
 python-pptx==0.6.23
 pytz==2025.1
 dashscope==1.20.0
-pywin32==306
+pywin32==306; platform_system == "Windows"
 PyYAML==6.0.1
 pyzmq==25.1.2
 qianfan==0.3.17.1
@@ -287,7 +289,7 @@ weaviate-client==4.8.1
 webencodings==0.5.1
 Werkzeug==3.0.1
 wikipedia==1.4.0
-win32-setctime==1.1.0
+win32-setctime==1.1.0; platform_system == "Windows"
 wrapt==1.16.0
 WTForms==3.1.2
 XlsxWriter==3.2.0

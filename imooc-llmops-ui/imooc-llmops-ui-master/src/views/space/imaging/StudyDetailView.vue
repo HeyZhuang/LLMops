@@ -7,12 +7,14 @@ import {
   useImagingAudit,
   useImagingReviewActions,
   useImagingSeries,
+  useImagingStudyActions,
   useImagingStudyDetail,
 } from '@/hooks/use-imaging'
 
 const route = useRoute()
 const { loading, study, loadImagingStudyDetail } = useImagingStudyDetail()
 const { saving, handleSaveDraft, handleSubmitReview } = useImagingReviewActions()
+const { submitting, handleCreateAnalysisTask } = useImagingStudyActions()
 const { loading: auditLoading, auditLogs, reviewLogs, feedbackStats, loadImagingAudit } = useImagingAudit()
 const { loading: analysisLoading, analysisResult, structuredFindings, loadImagingAnalysis } = useImagingAnalysis()
 const { loading: seriesLoading, series, instances, previewUrls, loadImagingSeries, loadSeriesInstances, loadInstancePreview } = useImagingSeries()
@@ -27,8 +29,11 @@ const activePreviewUrl = ref('')
 
 const statusMap: Record<string, string> = {
   waiting: '待处理',
+  pending: '待分析',
   awaiting_ai: '等待 AI 处理',
   ai_completed: 'AI 已完成',
+  running: '分析中',
+  failed: '分析失败',
   doctor_review: '待医生审核',
   doctor_reviewed: '医生已审核',
   doctor_revision_needed: '待医生修订',
@@ -59,6 +64,75 @@ const auditActionMap: Record<string, string> = {
   study_review_submitted: '提交医生审核',
 }
 
+const analysisTaskTypeMap: Record<string, string> = {
+  report_draft_assist: '报告草拟辅助',
+  hemorrhage_triage: '急诊出血初筛',
+  quality_control: '图像质控',
+}
+
+const analysisDisplayTitle = computed(() => {
+  if (analysisResult.value.task_type === 'report_draft_assist') return '胸部 CT 结构化结果'
+  if (analysisResult.value.task_type === 'hemorrhage_triage') return '头颅 CT 急诊初筛'
+  if (analysisResult.value.task_type === 'quality_control') return '影像质控结果'
+  return analysisResult.value.model_name || '影像分析结果'
+})
+
+const analysisMetaText = computed(() => {
+  const parts: string[] = []
+  const taskTypeLabel = analysisTaskTypeMap[analysisResult.value.task_type]
+  if (taskTypeLabel) parts.push(taskTypeLabel)
+  if (analysisResult.value.model_version) parts.push(analysisResult.value.model_version)
+  if (analysisResult.value.model_name) parts.push(analysisResult.value.model_name)
+  return parts.join(' / ')
+})
+
+const workflowStageItems = computed(() => {
+  const qualityStatus = study.value.quality_status || 'pending'
+  const analysisStatus = analysisResult.value.status || study.value.status || 'pending'
+  const reportStatus = study.value.report_draft.status || study.value.report_status || 'not_started'
+  const reviewStatus = study.value.review.label
+    ? study.value.review.label
+    : study.value.status === 'doctor_review'
+      ? 'pending_review'
+      : study.value.status
+
+  return [
+    { key: 'import', label: 'DICOM 导入', value: '已完成' },
+    { key: 'metadata', label: '元数据解析', value: '已完成' },
+    { key: 'quality', label: '图像质控', value: statusMap[qualityStatus] || qualityStatus },
+    { key: 'analysis', label: '结构化分析', value: statusMap[analysisStatus] || analysisStatus },
+    { key: 'draft', label: '报告草拟', value: reportStatusMap[reportStatus] || reportStatus },
+    { key: 'review', label: '医生审核', value: reviewLabelMap[reviewStatus] || statusMap[reviewStatus] || '待处理' },
+  ]
+})
+
+const structuredFindingItems = computed(() => structuredFindings.value.findings || [])
+
+const findingsRiskSummary = computed(() => {
+  const risks = structuredFindingItems.value
+    .map((item) => String(item.risk_level || '').trim())
+    .filter(Boolean)
+
+  if (risks.includes('medium')) return '中风险'
+  if (risks.includes('high')) return '高风险'
+  if (risks.includes('low')) return '低风险'
+  return '待评估'
+})
+
+const doctorActionHint = computed(() => {
+  if (analysisResult.value.task_type === 'report_draft_assist') {
+    return '建议医生结合原始切片、既往报告与随访指南，确认结节描述和随访建议。'
+  }
+  if (analysisResult.value.task_type === 'hemorrhage_triage') {
+    return '建议值班医生优先复核原片，必要时结合临床症状决定是否升级急诊流程。'
+  }
+  return '建议先完成图像质量确认，再决定是否继续分析、补采或进入报告流程。'
+})
+
+const canTriggerAnalysis = computed(() => {
+  return !analysisLoading.value && ['pending', 'awaiting_ai', 'waiting', 'failed'].includes(analysisResult.value.status || study.value.status)
+})
+
 const refreshStudy = async () => {
   if (!studyId.value) return
   await Promise.all([
@@ -72,6 +146,12 @@ const refreshStudy = async () => {
 const saveDraft = async () => {
   if (!studyId.value) return
   await handleSaveDraft(studyId.value, draftContent.value)
+  await refreshStudy()
+}
+
+const triggerAnalysis = async () => {
+  if (!studyId.value) return
+  await handleCreateAnalysisTask(studyId.value)
   await refreshStudy()
 }
 
@@ -273,18 +353,33 @@ watch(
             <div class="flex items-center justify-between gap-3">
               <div>
                 <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">分析结果</div>
-                <h2 class="mt-2 text-2xl font-bold text-[#17382d]">{{ analysisResult.model_name || '影像分析结果' }}</h2>
+                <h2 class="mt-2 text-2xl font-bold text-[#17382d]">{{ analysisDisplayTitle }}</h2>
               </div>
               <div class="rounded-full bg-[#edf4ef] px-3 py-1 text-xs font-semibold text-[#355346]">
                 {{ statusMap[analysisResult.status] || analysisResult.status || '待分析' }}
               </div>
             </div>
 
-            <div class="mt-3 text-sm text-[#5d746b]">
-              {{ analysisResult.model_version || 'v0.1' }} / {{ analysisResult.task_type || 'detection' }}
+            <div v-if="analysisMetaText" class="mt-3 text-sm text-[#5d746b]">
+              {{ analysisMetaText }}
             </div>
             <div class="mt-4 rounded-2xl bg-[#f5f8f6] px-4 py-4 text-sm leading-6 text-[#355346]">
               {{ analysisResult.summary || '当前暂无分析摘要。' }}
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-3">
+              <a-button
+                v-if="canTriggerAnalysis"
+                type="primary"
+                class="rounded-2xl"
+                :loading="submitting"
+                @click="triggerAnalysis"
+              >
+                触发结构化分析
+              </a-button>
+              <div class="rounded-2xl bg-[#eef5f2] px-4 py-3 text-sm text-[#355346]">
+                医生操作建议：{{ doctorActionHint }}
+              </div>
             </div>
 
             <div class="mt-4 grid gap-3">
@@ -395,6 +490,20 @@ watch(
         </div>
 
         <div class="grid gap-6">
+          <div class="rounded-3xl border border-[#d3ddd7] bg-white/92 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">流程阶段</div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div
+                v-for="item in workflowStageItems"
+                :key="item.key"
+                class="rounded-2xl border border-[#e2eae5] bg-[#f8fbf9] px-4 py-4"
+              >
+                <div class="text-xs font-bold tracking-[0.16em] text-[#6c8a7f]">{{ item.label }}</div>
+                <div class="mt-2 text-sm font-semibold text-[#17382d]">{{ item.value }}</div>
+              </div>
+            </div>
+          </div>
+
           <div class="rounded-3xl border border-[#d3ddd7] bg-white/92 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
             <div class="text-xs font-bold tracking-[0.2em] text-[#6c8a7f]">报告草稿</div>
             <h2 class="mt-2 text-2xl font-bold text-[#17382d]">{{ study.report_draft.template_name }}</h2>
@@ -509,9 +618,49 @@ watch(
             <div class="mt-2 text-sm text-[#5d746b]">
               {{ structuredFindings.summary || '暂无结构化发现摘要。' }}
             </div>
-            <pre
-              class="mt-4 overflow-auto rounded-2xl bg-[#17382d] p-4 text-xs leading-6 text-[#d9e7e0]"
-            >{{ JSON.stringify(structuredFindings.findings, null, 2) }}</pre>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div class="rounded-2xl bg-[#f5f8f6] px-4 py-3">
+                <div class="text-xs text-[#6c8a7f]">结构化发现数</div>
+                <div class="mt-2 text-xl font-bold text-[#17382d]">{{ structuredFindingItems.length }}</div>
+              </div>
+              <div class="rounded-2xl bg-[#f5f8f6] px-4 py-3">
+                <div class="text-xs text-[#6c8a7f]">风险分层</div>
+                <div class="mt-2 text-xl font-bold text-[#17382d]">{{ findingsRiskSummary }}</div>
+              </div>
+            </div>
+            <div class="mt-4 grid gap-3">
+              <div
+                v-for="(item, index) in structuredFindingItems"
+                :key="`${index}-${String(item.title || index)}`"
+                class="rounded-2xl border border-[#e2eae5] bg-[#f8fbf9] px-4 py-4"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-sm font-semibold text-[#17382d]">{{ String(item.title || '结构化发现') }}</div>
+                  <div class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#355346]">
+                    {{ Math.round(Number(item.confidence || 0) * 100) }}%
+                  </div>
+                </div>
+                <div class="mt-2 text-sm leading-6 text-[#5d746b]">{{ String(item.description || '') }}</div>
+                <div v-if="formatFindingMeta(item)" class="mt-2 text-xs text-[#6c8a7f]">
+                  {{ formatFindingMeta(item) }}
+                </div>
+              </div>
+              <div
+                v-if="!structuredFindingItems.length"
+                class="rounded-2xl border border-dashed border-[#dce6e0] px-4 py-4 text-sm text-[#5d746b]"
+              >
+                当前还没有可展示的结构化发现，请先触发分析任务。
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-[#e4ddd1] bg-[linear-gradient(135deg,#fffaf3_0%,#fff6ea_100%)] p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <div class="text-xs font-bold tracking-[0.2em] text-[#9a6d2f]">合规提示</div>
+            <div class="mt-3 grid gap-3 text-sm leading-6 text-[#6d5431]">
+              <div>AI 输出仅作为辅助意见，不能替代医生审核后形成正式诊断。</div>
+              <div>任何查看、推理、修改、审核行为都需要保留审计记录，当前页面已接入访问与审核日志。</div>
+              <div>如需对外展示，请避免使用“自动诊断”“替代医生”等高风险表述。</div>
+            </div>
           </div>
 
           <div class="rounded-3xl border border-[#d3ddd7] bg-white/92 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">

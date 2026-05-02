@@ -161,11 +161,19 @@ class FunctionCallAgent(BaseAgent):
         # 3.检测大语言模型实例是否有bind_tools方法，如果没有则不绑定，如果有还需要检测tools是否为空，不为空则绑定
         if (
                 ModelFeature.TOOL_CALL in llm.features
-                and hasattr(llm, "bind_tools")
-                and callable(getattr(llm, "bind_tools"))
                 and len(self.agent_config.tools) > 0
         ):
-            llm = llm.bind_tools(self.agent_config.tools)
+            bind_tools = getattr(llm, "bind_tools", None)
+            if callable(bind_tools):
+                try:
+                    llm = bind_tools(self.agent_config.tools)
+                except NotImplementedError:
+                    logging.warning(
+                        "Current LLM does not implement bind_tools, skip tool binding. "
+                        "model_class=%s, tools=%s",
+                        llm.__class__.__name__,
+                        [tool.name for tool in self.agent_config.tools],
+                    )
 
         # 4.流式调用LLM输出对应内容
         gathered = None

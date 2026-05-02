@@ -34,7 +34,7 @@ services:
     restart: always
     environment:
       QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "false"
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
       PERSISTENCE_DATA_PATH: /var/lib/weaviate
       DEFAULT_VECTORIZER_MODULE: "none"
       ENABLE_MODULES: "text2vec-openai,text2vec-cohere,text2vec-huggingface,ref2vec-centroid,generative-openai,qna-openai"
@@ -47,11 +47,24 @@ services:
       context: ./imooc-llmops-api/imooc-llmops-api-master
       dockerfile: Dockerfile
       args:
-        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
+        APT_MIRROR: ${APT_MIRROR:-deb.debian.org}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
     container_name: llmops-api
     restart: always
     env_file:
       - ./imooc-llmops-api/imooc-llmops-api-master/.env
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:${POSTGRES_PASSWORD:-ChangeMe123!}@postgres:5432/llmops
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_USE_SSL: "False"
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_PORT: 8080
+    volumes:
+      - backend_storage:/app/storage
     command: python -m gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 app.http.app:app
     depends_on:
       postgres:
@@ -66,11 +79,24 @@ services:
       context: ./imooc-llmops-api/imooc-llmops-api-master
       dockerfile: Dockerfile
       args:
-        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
+        APT_MIRROR: ${APT_MIRROR:-deb.debian.org}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
     container_name: llmops-celery
     restart: always
     env_file:
       - ./imooc-llmops-api/imooc-llmops-api-master/.env
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:${POSTGRES_PASSWORD:-ChangeMe123!}@postgres:5432/llmops
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_USE_SSL: "False"
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_PORT: 8080
+    volumes:
+      - backend_storage:/app/storage
     command: celery -A app.http.app:celery worker --loglevel=info --concurrency=1
     depends_on:
       postgres:
@@ -107,3 +133,4 @@ volumes:
   postgres_data:
   redis_data:
   weaviate_data:
+  backend_storage:

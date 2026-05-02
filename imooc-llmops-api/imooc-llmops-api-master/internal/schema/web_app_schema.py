@@ -27,7 +27,7 @@ class GetWebAppResp(Schema):
         app_config = data.app_config
         return {
             "id": data.id,
-            "icon": data.icon,
+            "icon": getattr(data, "icons", getattr(data, "icon", "")),
             "name": data.name,
             "description": data.description,
             "app_config": {

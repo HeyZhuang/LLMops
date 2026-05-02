@@ -45,6 +45,7 @@ const statusMap: Record<string, string> = {
   waiting: '待处理',
   awaiting_ai: '等待 AI',
   ai_completed: 'AI 已完成',
+  failed: '分析失败',
   doctor_review: '待审核',
   doctor_reviewed: '已审核',
   doctor_revision_needed: '待修订',

@@ -16,7 +16,9 @@ from typing import Any
 from uuid import UUID
 from uuid import uuid5, NAMESPACE_DNS
 
+import requests
 from injector import inject
+from requests import RequestException
 from sqlalchemy import func, inspect
 
 try:
@@ -62,6 +64,44 @@ class ImagingService(BaseService):
 
     def _should_use_cos(self) -> bool:
         return self._storage_mode() in {"cos", "hybrid"} and self.cos_service.is_configured()
+
+    @staticmethod
+    def _inference_timeout() -> int:
+        try:
+            return max(int(os.getenv("IMAGING_INFERENCE_TIMEOUT_SECONDS", "120")), 5)
+        except ValueError:
+            return 120
+
+    @staticmethod
+    def _inference_endpoint() -> str:
+        endpoint = os.getenv("IMAGING_INFERENCE_ENDPOINT", "").strip()
+        if endpoint:
+            return endpoint
+
+        base_url = os.getenv("IMAGING_INFERENCE_BASE_URL", "").strip().rstrip("/")
+        if not base_url:
+            return ""
+        return f"{base_url}/v1/imaging/analyze"
+
+    @staticmethod
+    def _inference_api_key() -> str:
+        return os.getenv("IMAGING_INFERENCE_API_KEY", "").strip()
+
+    @classmethod
+    def _real_inference_enabled(cls) -> bool:
+        return bool(cls._inference_endpoint())
+
+    @classmethod
+    def _inference_headers(cls) -> dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        api_key = cls._inference_api_key()
+        if not api_key:
+            return headers
+
+        header_name = os.getenv("IMAGING_INFERENCE_API_HEADER", "Authorization").strip() or "Authorization"
+        header_scheme = os.getenv("IMAGING_INFERENCE_API_SCHEME", "Bearer").strip()
+        headers[header_name] = f"{header_scheme} {api_key}".strip() if header_scheme else api_key
+        return headers
 
     @staticmethod
     def _stringify_dicom_value(value: Any, default: str = "") -> str:
@@ -176,6 +216,77 @@ class ImagingService(BaseService):
             "rows": int(getattr(dataset, "Rows", 0) or 0),
             "columns": int(getattr(dataset, "Columns", 0) or 0),
         }
+
+    def _build_inference_payload(self, study: dict[str, Any]) -> dict[str, Any]:
+        study_id = str(study.get("id", ""))
+        upload = dict(study.get("upload") or {})
+        series = self._load_db_series(study_id) if study_id else []
+        if not series:
+            series = list(study.get("series") or [])
+
+        instance_map = dict(study.get("instances_map") or {})
+        if study_id and not instance_map:
+            for series_item in series:
+                series_id = str(series_item.get("id", "")).strip()
+                if series_id and self._has_table("imaging_instance"):
+                    instance_map[series_id] = self._load_db_instances(study_id, series_id)
+
+        return {
+            "study": {
+                "id": study_id,
+                "patient_code": study.get("patient_code", ""),
+                "patient_name_masked": study.get("patient_name_masked", ""),
+                "modality": study.get("modality", ""),
+                "body_part": study.get("body_part", ""),
+                "study_description": study.get("study_description", ""),
+                "study_time": study.get("study_time", 0),
+                "priority": study.get("priority", "normal"),
+                "status": study.get("status", ""),
+                "quality_status": study.get("quality_status", ""),
+            },
+            "dicom_metadata": dict(study.get("dicom_metadata") or {}),
+            "series": series,
+            "instances_map": instance_map,
+            "upload": {
+                "file_name": upload.get("file_name", ""),
+                "stored_path": upload.get("stored_path", ""),
+                "cos_url": upload.get("cos_url", ""),
+                "cos_key": upload.get("cos_key", ""),
+                "storage_mode": upload.get("storage_mode", "local"),
+            },
+            "requested_model": self._analysis_profile(study),
+        }
+
+    @classmethod
+    def _normalize_external_inference_payload(cls, study: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+        data = dict(payload.get("data") or payload)
+        normalized = {
+            "status": str(data.get("status", "completed") or "completed"),
+            "task_type": str(data.get("task_type", "") or ""),
+            "model_name": str(data.get("model_name", "") or ""),
+            "model_version": str(data.get("model_version", "") or ""),
+            "summary": str(data.get("summary", "") or ""),
+            "findings": list(data.get("findings") or []),
+            "measurements": list(data.get("measurements") or []),
+            "overlays": list(data.get("overlays") or []),
+            "updated_at": int(data.get("updated_at") or datetime.now().timestamp()),
+        }
+        return cls._normalize_analysis_payload(study, normalized)
+
+    def _run_external_inference(self, study: dict[str, Any]) -> dict[str, Any]:
+        endpoint = self._inference_endpoint()
+        if not endpoint:
+            raise ValueError("IMAGING_INFERENCE_ENDPOINT or IMAGING_INFERENCE_BASE_URL is not configured.")
+
+        response = requests.post(
+            endpoint,
+            headers=self._inference_headers(),
+            json=self._build_inference_payload(study),
+            timeout=self._inference_timeout(),
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return self._normalize_external_inference_payload(study, payload)
 
     def _group_instances_by_series(self, instances: list[dict[str, Any]]) -> list[dict[str, Any]]:
         series_map: dict[str, dict[str, Any]] = {}
@@ -604,7 +715,68 @@ class ImagingService(BaseService):
         ]
 
     @staticmethod
+    def _analysis_profile(study: dict[str, Any]) -> dict[str, str]:
+        body_part = str(study.get("body_part", "")).strip()
+        modality = str(study.get("modality", "")).strip().upper()
+
+        if body_part == "Chest" and modality == "CT":
+            return {
+                "task_type": "report_draft_assist",
+                "model_name": "chest-ct-report-assistant",
+                "model_version": "phase-1-mvp",
+            }
+
+        if body_part == "Brain" and modality == "CT":
+            return {
+                "task_type": "hemorrhage_triage",
+                "model_name": "head-ct-triage-assistant",
+                "model_version": "phase-2-preview",
+            }
+
+        return {
+            "task_type": "quality_control",
+            "model_name": "imaging-quality-gate",
+            "model_version": "phase-0-baseline",
+        }
+
+    @classmethod
+    def _normalize_analysis_payload(cls, study: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+        profile = cls._analysis_profile(study)
+        normalized = dict(payload)
+        legacy_model_name = str(normalized.get("model_name", "")).strip()
+
+        if not legacy_model_name or legacy_model_name == "imaging-mvp-demo":
+            normalized["model_name"] = profile["model_name"]
+
+        legacy_model_version = str(normalized.get("model_version", "")).strip().lower()
+        if not legacy_model_version or legacy_model_version == "v0.1":
+            normalized["model_version"] = profile["model_version"]
+
+        legacy_task_type = str(normalized.get("task_type", "")).strip().lower()
+        if not legacy_task_type or legacy_task_type == "detection":
+            normalized["task_type"] = profile["task_type"]
+
+        normalized["findings"] = list(normalized.get("findings") or [])
+        normalized["measurements"] = list(normalized.get("measurements") or [])
+        normalized["overlays"] = list(normalized.get("overlays") or [])
+        normalized["updated_at"] = int(normalized.get("updated_at") or datetime.now().timestamp())
+        return normalized
+
+    @staticmethod
+    def _should_expose_default_analysis(study: dict[str, Any]) -> bool:
+        return str(study.get("status", "")).strip() in {
+            "ai_completed",
+            "doctor_review",
+            "doctor_reviewed",
+            "doctor_revision_needed",
+            "doctor_rejected",
+            "completed",
+        } or int(study.get("findings_count", 0) or 0) > 0
+
+    @classmethod
     def _default_analysis_payload(study: dict[str, Any]) -> dict[str, Any]:
+        profile = cls._analysis_profile(study)
+
         if study["body_part"] == "Chest":
             findings = [
                 {
@@ -624,7 +796,7 @@ class ImagingService(BaseService):
                     "risk_level": "low",
                 },
             ]
-            summary = "右上肺检出 2 处结节，建议结合指南进行随访复核。"
+            summary = "胸部 CT 结构化结果已生成，发现 2 条肺结节线索，可继续进入报告草拟与医生审核。"
         elif study["body_part"] == "Brain":
             findings = [
                 {
@@ -636,7 +808,7 @@ class ImagingService(BaseService):
                     "risk_level": "low",
                 },
             ]
-            summary = "当前未见明确颅内急性出血征象，建议医生人工复核。"
+            summary = "头颅 CT 急诊初筛已完成，当前未见明确急性出血线索，建议医生结合原片复核。"
         else:
             findings = [
                 {
@@ -648,13 +820,13 @@ class ImagingService(BaseService):
                     "risk_level": "low",
                 },
             ]
-            summary = "检测到图像质量预警，建议人工确认后再继续分析。"
+            summary = "当前检查进入质控预警流程，建议先完成图像质量确认，再继续后续分析。"
 
         return {
             "status": "completed",
-            "task_type": "detection",
-            "model_name": "imaging-mvp-demo",
-            "model_version": "v0.1",
+            "task_type": profile["task_type"],
+            "model_name": profile["model_name"],
+            "model_version": profile["model_version"],
             "summary": summary,
             "findings": findings,
             "measurements": [],
@@ -940,7 +1112,7 @@ class ImagingService(BaseService):
                 "study_time": int((base_time - timedelta(hours=2)).timestamp()),
                 "status": "doctor_review",
                 "quality_status": "qualified",
-                "ai_summary": "右上肺检出 2 处结节，报告草稿已生成，等待医生审核。",
+                "ai_summary": "胸部 CT 结构化结果已生成，报告草稿待医生审核。",
                 "findings_count": 2,
                 "report_status": "draft_ready",
                 "priority": "normal",
@@ -1002,7 +1174,7 @@ class ImagingService(BaseService):
                 "study_time": int((base_time - timedelta(hours=6)).timestamp()),
                 "status": "ai_completed",
                 "quality_status": "qualified",
-                "ai_summary": "当前未见明确颅内急性出血征象，建议医生人工复核。",
+                "ai_summary": "头颅 CT 急诊初筛已完成，当前未见明确急性出血线索，待医生复核。",
                 "findings_count": 1,
                 "report_status": "pending_draft",
                 "priority": "urgent",
@@ -1042,7 +1214,7 @@ class ImagingService(BaseService):
                 "study_time": int((base_time - timedelta(days=1, hours=1)).timestamp()),
                 "status": "awaiting_ai",
                 "quality_status": "needs_review",
-                "ai_summary": "图像质控提示轻度运动伪影，等待人工确认。",
+                "ai_summary": "胸部 DR 已进入质控队列，待确认运动伪影后再触发分析。",
                 "findings_count": 0,
                 "report_status": "not_started",
                 "priority": "normal",
@@ -1242,7 +1414,8 @@ class ImagingService(BaseService):
 
             analysis_result = analysis_results.get(study["id"])
             if analysis_result:
-                study["status"] = "ai_completed"
+                analysis_result = self._normalize_analysis_payload(study, analysis_result)
+                study["status"] = "ai_completed" if analysis_result.get("status") != "failed" else "failed"
                 study["ai_summary"] = analysis_result.get("summary", study["ai_summary"])
                 study["findings_count"] = len(analysis_result.get("findings", []))
 
@@ -1268,6 +1441,8 @@ class ImagingService(BaseService):
         analysis_result = self.get_analysis_result(study["id"], account)
         structured_findings = analysis_result.get("findings", [])
 
+        template_name = "影像报告标准模板"
+
         if structured_findings:
             findings = [
                 {
@@ -1278,6 +1453,7 @@ class ImagingService(BaseService):
                 for item in structured_findings
             ]
         elif study["body_part"] == "Chest":
+            template_name = "胸部 CT 报告助手模板"
             findings = [
                 {
                     "title": "Right upper lobe nodule",
@@ -1291,11 +1467,11 @@ class ImagingService(BaseService):
                 },
             ]
             report_draft = (
-                "Findings: Small solid pulmonary nodules are seen in the right upper lobe, "
-                "largest about 8 mm. No pleural effusion or enlarged mediastinal lymph nodes. "
-                "Impression: Right upper lobe pulmonary nodules, recommend follow-up with low-dose CT."
+                "检查所见：右上肺见小结节影，最大约 8 mm，边界相对清晰；余肺野未见明显大片实变影，未见明显胸腔积液或纵隔明显肿大淋巴结。\n"
+                "影像印象：右上肺结节，建议结合既往检查并按随访指南复查低剂量胸部 CT。"
             )
         elif study["body_part"] == "Brain":
+            template_name = "头颅 CT 急诊初筛模板"
             findings = [
                 {
                     "title": "No definite acute hemorrhage",
@@ -1304,10 +1480,11 @@ class ImagingService(BaseService):
                 },
             ]
             report_draft = (
-                "Findings: Brain parenchyma density is generally symmetric. No definite acute hemorrhage seen. "
-                "Ventricular system is not enlarged. Impression: No obvious acute intracranial hemorrhage on current CT."
+                "检查所见：脑实质密度大致对称，当前未见明确急性高密度出血灶，脑室系统形态大小未见明显异常。\n"
+                "影像印象：本次头颅 CT 未见明确急性颅内出血征象，建议结合临床症状与医生复核结果判断。"
             )
         else:
+            template_name = "影像质控复核模板"
             findings = [
                 {
                     "title": "Quality warning",
@@ -1316,25 +1493,27 @@ class ImagingService(BaseService):
                 },
             ]
             report_draft = (
-                "Findings: Mild motion artifact is present. No large focal consolidation is clearly identified. "
-                "Impression: Recommend clinician correlation and repeat image if clinically indicated."
+                "检查所见：图像存在轻度运动伪影，对局部结构显示造成一定影响。\n"
+                "影像印象：建议优先完成图像质量复核，必要时补充采集后再进入正式分析流程。"
             )
 
         if structured_findings and study["body_part"] == "Chest":
+            template_name = "胸部 CT 报告助手模板"
             report_draft = (
-                "Findings: Small solid pulmonary nodules are seen in the right upper lobe, "
-                "largest about 8 mm. No pleural effusion or enlarged mediastinal lymph nodes. "
-                "Impression: Right upper lobe pulmonary nodules, recommend follow-up with low-dose CT."
+                "检查所见：AI 结构化结果提示右上肺可见结节样病灶，其中较大者约 8 mm；其余胸部可见结构未提示明确高危异常。\n"
+                "影像印象：右上肺结节待医生复核确认，建议结合既往影像并参考随访指南完善处置建议。"
             )
         elif structured_findings and study["body_part"] == "Brain":
+            template_name = "头颅 CT 急诊初筛模板"
             report_draft = (
-                "Findings: Brain parenchyma density is generally symmetric. No definite acute hemorrhage seen. "
-                "Ventricular system is not enlarged. Impression: No obvious acute intracranial hemorrhage on current CT."
+                "检查所见：AI 初筛未提示明确急性出血灶，脑实质密度分布基本对称。\n"
+                "影像印象：当前未见明确急诊高危出血线索，建议由值班医生结合原始影像进一步复核。"
             )
         elif structured_findings:
+            template_name = "影像质控复核模板"
             report_draft = (
-                "Findings: Mild motion artifact is present. No large focal consolidation is clearly identified. "
-                "Impression: Recommend clinician correlation and repeat image if clinically indicated."
+                "检查所见：当前检查以质控预警为主，图像质量对后续判断存在一定影响。\n"
+                "影像印象：建议先完成人工确认，再决定是否继续分析或补采图像。"
             )
 
         reports, reviews = self._load_persisted_state(str(account.id))
@@ -1350,14 +1529,16 @@ class ImagingService(BaseService):
             "report_draft": {
                 "status": report_state.get("status", study["report_status"]),
                 "content": report_state.get("content", report_draft),
-                "template_name": f"{study['body_part']} Standard Report Template",
+                "template_name": template_name,
                 "template_version": "v1.0",
             },
             "timeline": [
-                {"label": "Study imported", "value": "Completed"},
-                {"label": "Quality check", "value": study["quality_status"]},
-                {"label": "AI inference", "value": analysis_result.get("status", review_state.get("status", study["status"]))},
-                {"label": "Doctor review", "value": report_state.get("status", study["report_status"])},
+                {"label": "DICOM 导入", "value": "已完成"},
+                {"label": "检查脱敏与元数据解析", "value": "已完成"},
+                {"label": "图像质控", "value": study["quality_status"]},
+                {"label": "AI 分析 / 结构化结果", "value": analysis_result.get("status", review_state.get("status", study["status"]))},
+                {"label": "报告草拟", "value": report_state.get("status", study["report_status"])},
+                {"label": "医生审核", "value": review_state.get("status", study["status"])},
             ],
             "review": {
                 "label": review_state.get("label", ""),
@@ -1568,7 +1749,28 @@ class ImagingService(BaseService):
         if study is None:
             return {"study_id": study_id, "status": "not_found"}
 
-        payload = self._default_analysis_payload(study)
+        inference_error = ""
+        if self._real_inference_enabled():
+            try:
+                payload = self._run_external_inference(study)
+            except (RequestException, ValueError) as exc:
+                payload = self._normalize_analysis_payload(
+                    study,
+                    {
+                        "status": "failed",
+                        "task_type": self._analysis_profile(study)["task_type"],
+                        "model_name": self._analysis_profile(study)["model_name"],
+                        "model_version": self._analysis_profile(study)["model_version"],
+                        "summary": f"外部影像推理服务调用失败：{exc}",
+                        "findings": [],
+                        "measurements": [],
+                        "overlays": [],
+                        "updated_at": int(datetime.now().timestamp()),
+                    },
+                )
+                inference_error = str(exc)
+        else:
+            payload = self._normalize_analysis_payload(study, self._default_analysis_payload(study))
 
         if self._has_table("imaging_ai_result") and self._has_table("imaging_study"):
             item = self.create(
@@ -1593,22 +1795,22 @@ class ImagingService(BaseService):
                 meta = dict(db_study.meta or {})
                 meta["findings"] = payload["findings"]
                 meta["ai_summary"] = payload["summary"]
-                meta["report_status"] = meta.get("report_status", "pending_draft")
+                meta["report_status"] = meta.get("report_status", "pending_draft") if payload["status"] != "failed" else meta.get("report_status", "not_started")
                 meta["priority"] = meta.get("priority", study.get("priority", "normal"))
                 self.update(
                     db_study,
-                    processing_status="ai_completed",
+                    processing_status="ai_completed" if payload["status"] != "failed" else "awaiting_ai",
                     quality_status="qualified" if db_study.quality_status == "pending" else db_study.quality_status,
                     meta=meta,
                 )
             task_id = str(item.id)
         else:
             demo_study = dict(study)
-            demo_study["status"] = "ai_completed"
+            demo_study["status"] = "ai_completed" if payload["status"] != "failed" else "awaiting_ai"
             demo_study["quality_status"] = "qualified" if demo_study["quality_status"] == "pending" else demo_study["quality_status"]
             demo_study["ai_summary"] = payload["summary"]
             demo_study["findings_count"] = len(payload["findings"])
-            if demo_study["report_status"] == "not_started":
+            if payload["status"] != "failed" and demo_study["report_status"] == "not_started":
                 demo_study["report_status"] = "pending_draft"
             self._save_demo_study(str(account.id), demo_study)
             task_id = str(uuid5(NAMESPACE_DNS, f"{study_id}-analysis-task"))
@@ -1627,13 +1829,22 @@ class ImagingService(BaseService):
             action="analysis_task_created",
             target_type="analysis",
             target_id=task_id,
-            details={"task_type": payload["task_type"], "status": payload["status"]},
+            details={
+                "task_type": payload["task_type"],
+                "status": payload["status"],
+                "inference_endpoint": self._inference_endpoint(),
+                "error": inference_error,
+            },
+            success=payload["status"] != "failed",
         )
         return {
             "study_id": study_id,
             "task_id": task_id,
             "status": payload["status"],
             "task_type": payload["task_type"],
+            "message": "已调用真实影像推理服务。" if self._real_inference_enabled() and not inference_error else (
+                "外部影像推理服务调用失败。" if inference_error else "当前未配置真实影像推理服务，已使用默认演示结果。"
+            ),
         }
 
     def get_analysis_result(self, study_id: str, account) -> dict[str, Any]:
@@ -1643,13 +1854,28 @@ class ImagingService(BaseService):
 
         db_result = self._load_db_analysis_result(study_id)
         if db_result is not None:
-            return {"study_id": study_id, **db_result}
+            return {"study_id": study_id, **self._normalize_analysis_payload(study, db_result)}
 
         demo_result = self._load_demo_analysis_map(str(account.id)).get(study_id)
         if demo_result is not None:
-            return {"study_id": study_id, **demo_result}
+            return {"study_id": study_id, **self._normalize_analysis_payload(study, demo_result)}
 
-        payload = self._default_analysis_payload(study)
+        if not self._should_expose_default_analysis(study):
+            return {
+                "study_id": study_id,
+                "task_id": "",
+                "status": "pending",
+                "task_type": "",
+                "model_name": "",
+                "model_version": "",
+                "summary": "当前检查尚未生成结构化分析结果，请先触发分析任务。",
+                "findings": [],
+                "measurements": [],
+                "overlays": [],
+                "updated_at": int(datetime.now().timestamp()),
+            }
+
+        payload = self._normalize_analysis_payload(study, self._default_analysis_payload(study))
         return {
             "study_id": study_id,
             "task_id": "",

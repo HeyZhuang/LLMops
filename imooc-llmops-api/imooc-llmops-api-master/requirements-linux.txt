@@ -1,0 +1,6 @@
+# Linux deployment entrypoint.
+# Reuses the shared dependency set while skipping Windows-only packages via
+# environment markers defined in requirements.txt.
+
+-c constraints.txt
+-r requirements.txt

@@ -1,36 +1,49 @@
-FROM python:3.11-slim
+ARG PYTHON_IMAGE=python:3.11-slim
+FROM ${PYTHON_IMAGE}
 
-# 设置工作目录
 WORKDIR /app
 
-# 设置环境变量
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_DEFAULT_TIMEOUT=120
 
-# 默认使用国内 APT 镜像（可通过构建参数覆盖，例如：--build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn）
-ARG APT_MIRROR=mirrors.aliyun.com
+ARG APT_MIRROR=deb.debian.org
+ARG PIP_INDEX_URL=https://pypi.org/simple
+ARG PIP_EXTRA_INDEX_URL=
+ARG PYTHON_REQUIREMENTS_FILE=requirements-linux.txt
 
-# 【优化 1：替换 Debian 系统源为阿里云镜像】
-# 忽略报错以兼容不同版本的 Debian 配置文件格式
+# Replace Debian mirrors when building in mainland China while remaining
+# compatible with both sources.list and debian.sources layouts.
 RUN sed -i "s/deb.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
     && sed -i "s/security.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
     && sed -i "s/deb.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list 2>/dev/null || true \
     && sed -i "s/security.debian.org/${APT_MIRROR}/g" /etc/apt/sources.list 2>/dev/null || true \
     && apt-get update \
-    && apt-get install -y --no-install-recommends gcc g++ libpq-dev \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        gcc \
+        g++ \
+        libpq-dev \
+        pkg-config \
+        libmagic1 \
+        libmagic-dev \
+        poppler-utils \
+        libglib2.0-0 \
+        libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制依赖文件
-COPY requirements.txt .
+COPY constraints.txt requirements.txt requirements-linux.txt ./
 
-# 【优化 2：使用清华源加速安装 Python 依赖】
-RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+# Prefer wheels first to reduce Linux source-build failures.
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir --prefer-binary \
+        --index-url ${PIP_INDEX_URL} \
+        --extra-index-url ${PIP_EXTRA_INDEX_URL} \
+        -r ${PYTHON_REQUIREMENTS_FILE}
 
-# 复制应用代码
 COPY . .
 
-# 暴露端口
 EXPOSE 8000
 
-# 启动命令
 CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "app.http.app:app"]

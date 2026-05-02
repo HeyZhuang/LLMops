@@ -239,6 +239,7 @@ export type CreateImagingAnalysisTaskResult = {
   task_id: string
   status: string
   task_type: string
+  message?: string
 }
 
 export type CreateImagingAnalysisTaskResponse = BaseResponse<CreateImagingAnalysisTaskResult>
